@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 
-// 👑 介面與原本保持一致
 interface MetalsData {
   updated_at?: string
   fetch_timestamp?: string
@@ -22,13 +21,25 @@ export default function DetailedPriceTable() {
   useEffect(() => {
     const fetchPrice = async () => {
       try {
-        const res = await fetch("http://localhost:9000/store/metals", {
+        // 👇 關鍵資安與防呆修復：動態抓取環境變數網址，不寫死 localhost
+        const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || ""
+        if (!backendUrl) throw new Error("尚未設定後端 API 網址")
+
+        const res = await fetch(`${backendUrl}/store/metals`, {
           headers: {
-            "x-publishable-api-key":
-              process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ||
-              "pk_88148e6cb6c2e437308f3be55ffc48bccd3a8956ebd9f0073cc9901382c39bb5",
+            "x-publishable-api-key": process.env
+              .NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string,
           },
         })
+
+        if (!res.ok) throw new Error("API 請求失敗")
+
+        // 確保拿到的是 JSON，避免 HTML 404 造成的 Unexpected token < 錯誤
+        const contentType = res.headers.get("content-type")
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new TypeError("回傳的格式不是 JSON，請確認 API 路徑是否正確")
+        }
+
         const json = await res.json()
         if (json.success) setData(json.data)
       } catch (error) {
@@ -50,7 +61,6 @@ export default function DetailedPriceTable() {
 
   if (!data) return null
 
-  // === 🧮 萃取數值 ===
   const rawGold = data.base_gold_twd_qian ?? data.gold_price_qian ?? 0
   const rawPt = data.base_platinum_twd_qian ?? data.platinum_price_qian ?? 0
   const rawAg = data.base_silver_twd_qian ?? data.silver_price_qian ?? 0
@@ -58,13 +68,11 @@ export default function DetailedPriceTable() {
   const updateTime =
     data.fetch_timestamp ?? data.updated_at ?? new Date().toISOString()
 
-  // 模擬店面牌告價
   const storeGoldSell = rawGold + 800
   const storeGoldBuy = rawGold - 200
 
   return (
     <div className="w-full max-w-[1400px] mx-auto mt-12 px-4 lg:px-8 mb-20 font-mono">
-      {/* 區塊標題 */}
       <div className="flex items-end justify-between mb-4 border-b border-[#D4AF37]/40 pb-3">
         <div>
           <h2 className="text-2xl md:text-4xl font-serif text-[#5A1216] tracking-widest    ">
@@ -83,7 +91,6 @@ export default function DetailedPriceTable() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* ================= 左側欄：匯率與國際指數 ================= */}
         <div className="col-span-1 space-y-6">
           <div className="bg-[#5A1216] border border-[#D4AF37]/30 rounded-lg overflow-hidden ">
             <div className="bg-[#3A0A0E] px-4 py-2 text-sm font-bold text-[#D4AF37] border-b border-[#D4AF37]/20">
@@ -142,9 +149,7 @@ export default function DetailedPriceTable() {
           </div>
         </div>
 
-        {/* ================= 右側欄：金價主表 ================= */}
         <div className="col-span-1 lg:col-span-3 space-y-6">
-          {/* 區塊 1：唐宋門市牌告價 */}
           <div className="bg-gradient-to-br from-[#73171C] to-[#4A0E12] border border-[#D4AF37]/50 rounded-lg overflow-hidden shadow-2xl">
             <div className="bg-[#D4AF37]/10 px-4 py-3 text-sm font-bold text-[#D4AF37] border-b border-[#D4AF37]/30">
               唐宋珠寶 實體門市牌告價 (新台幣 / 台錢)
@@ -189,7 +194,6 @@ export default function DetailedPriceTable() {
             </div>
           </div>
 
-          {/* 區塊 2：國際現貨金價 */}
           <div className="bg-[#5A1216] border border-[#D4AF37]/30 rounded-lg overflow-hidden ">
             <div className="bg-[#3A0A0E] px-4 py-2 text-sm font-bold text-[#D4AF37] border-b border-[#D4AF37]/20">
               國際現貨金價即時行情 (新台幣 / 台錢)
@@ -213,7 +217,6 @@ export default function DetailedPriceTable() {
                     <td className="py-3 px-4 text-[#FDF5E6] font-bold text-base">
                       {rawGold.toLocaleString()}
                     </td>
-                    {/* 因為背景是深紅，上漲的紅色改用較亮的珊瑚紅 #FF6B6B 確保清晰度 */}
                     <td className="py-3 px-4 text-[#FF6B6B] font-medium">
                       +125.50 ▲
                     </td>

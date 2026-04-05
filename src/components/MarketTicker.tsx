@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 
-// 👑 資料介面
 interface MetalsData {
   updated_at?: string
   fetch_timestamp?: string
@@ -15,9 +14,6 @@ interface MetalsData {
   base_silver_twd_qian?: number
 }
 
-// ==========================================
-// 👑 店家利潤參數
-// ==========================================
 const STORE_SPREAD = {
   gold_sell_premium: 800,
   gold_buy_discount: -200,
@@ -30,20 +26,30 @@ const STORE_SPREAD = {
 export default function MarketTicker() {
   const [data, setData] = useState<MetalsData | null>(null)
   const [loading, setLoading] = useState(true)
-
-  // 🌟 新增：控制視窗是否收合的狀態 (預設為展開 false)
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   useEffect(() => {
     const fetchPrice = async () => {
       try {
-        const res = await fetch("http://localhost:9000/store/metals", {
+        // 👇 關鍵資安與防呆修復：不寫死 localhost
+        const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || ""
+        if (!backendUrl) throw new Error("尚未設定後端 API 網址")
+
+        const res = await fetch(`${backendUrl}/store/metals`, {
           headers: {
-            "x-publishable-api-key":
-              process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ||
-              "pk_88148e6cb6c2e437308f3be55ffc48bccd3a8956ebd9f0073cc9901382c39bb5",
+            "x-publishable-api-key": process.env
+              .NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string,
           },
         })
+
+        if (!res.ok) throw new Error("API 請求失敗")
+
+        // 確保拿到的是 JSON，防呆機制
+        const contentType = res.headers.get("content-type")
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new TypeError("回傳的格式不是 JSON，請確認 API 路徑是否正確")
+        }
+
         const json = await res.json()
 
         let targetData = null
@@ -74,7 +80,6 @@ export default function MarketTicker() {
     return () => clearInterval(interval)
   }, [])
 
-  // 🚨 骨架屏 (Loading 狀態) 色系同步更新為深紅色
   if (loading) {
     return (
       <div className="fixed right-2 md:right-6 top-1/2 -translate-y-1/2 z-[999] w-72 p-5 bg-[#3A0A0E]/90 backdrop-blur-md border border-[#D4AF37]/20 rounded-xl  animate-pulse transform origin-right scale-90 md:scale-100">
@@ -103,9 +108,6 @@ export default function MarketTicker() {
   const agSell = rawAg + STORE_SPREAD.silver_sell_premium
   const agBuy = rawAg + STORE_SPREAD.silver_buy_discount
 
-  // ==========================================
-  // 🌟 狀態一：收合時顯示的「側邊小標籤」
-  // ==========================================
   if (isCollapsed) {
     return (
       <button
@@ -127,12 +129,8 @@ export default function MarketTicker() {
     )
   }
 
-  // ==========================================
-  // 🌟 狀態二：展開時顯示的「完整面板」(古典燕脂紅配色)
-  // ==========================================
   return (
     <div className="fixed right-2 md:right-6 top-1/2 -translate-y-1/2 z-[999] flex flex-col gap-4 w-[300px] md:w-[320px] p-5 bg-[#3A0A0E]/95 backdrop-blur-md border border-[#D4AF37]/40 rounded-xl   transition-all duration-500 hover:border-[#D4AF37]/70 transform origin-right scale-90 md:scale-100">
-      {/* 標頭區塊 */}
       <div className="border-b border-[#D4AF37]/30 pb-2 relative">
         <div className="flex items-center justify-between pr-6">
           <h3 className="text-sm font-bold tracking-widest text-[#D4AF37] flex items-center gap-2">
@@ -147,7 +145,6 @@ export default function MarketTicker() {
           國際匯率：1 USD = {rate.toFixed(2)} TWD
         </p>
 
-        {/* 🌟 收合按鈕 (右上角 X) */}
         <button
           onClick={() => setIsCollapsed(true)}
           className="absolute right-0 top-0 text-[#E8DCC4]/50 hover:text-[#FDF5E6] hover:rotate-90 transition-all duration-300 w-6 h-6 flex items-center justify-center text-lg"
@@ -157,9 +154,7 @@ export default function MarketTicker() {
         </button>
       </div>
 
-      {/* 價格列表區塊 */}
       <div className="flex flex-col gap-3">
-        {/* 黃金飾金 (帶有暗紅漸層凸顯) */}
         <div className="bg-gradient-to-r from-[#73171C]/60 to-transparent p-3 rounded-lg border border-[#D4AF37]/30">
           <div className="text-[#D4AF37] text-sm font-bold tracking-widest mb-2 border-b border-[#D4AF37]/20 pb-1">
             黃金飾金{" "}
@@ -186,7 +181,6 @@ export default function MarketTicker() {
           </div>
         </div>
 
-        {/* 白金 Pt950 */}
         <div className="bg-[#5A1216]/50 p-3 rounded-lg border border-[#D4AF37]/15">
           <div className="text-[#E4E4E4] text-xs font-bold tracking-widest mb-2 border-b border-[#D4AF37]/15 pb-1">
             白金 Pt950{" "}
@@ -208,7 +202,6 @@ export default function MarketTicker() {
           </div>
         </div>
 
-        {/* 白銀 */}
         <div className="flex justify-between items-center bg-[#5A1216]/40 px-3 py-2 rounded-lg border border-[#D4AF37]/10">
           <span className="text-xs tracking-widest text-[#D1D5DB] font-bold">
             白銀{" "}
@@ -223,7 +216,6 @@ export default function MarketTicker() {
         </div>
       </div>
 
-      {/* 聯絡按鈕 (改為雅緻金底，深紅字) */}
       <button className="mt-1 w-full py-2.5 bg-[#D4AF37] hover:bg-[#B8942E] text-[#3A0A0E] font-bold text-sm tracking-widest transition-colors rounded shadow-[0_0_15px_rgba(212,175,55,0.3)]">
         聯絡我們 / 預約鑑價
       </button>

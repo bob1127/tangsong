@@ -5,6 +5,7 @@ import RefinementList from "@modules/store/components/refinement-list"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
 import PaginatedProducts from "./paginated-products"
+import { div } from "three/src/nodes/math/OperatorNode"
 
 const StoreTemplate = ({
   sortBy,
@@ -20,7 +21,7 @@ const StoreTemplate = ({
 
   return (
     <div
-      className="flex flex-col small:flex-row small:items-start py-6 content-container"
+      className="flex flex-col min-h-screen pt-5 sm:pt-10 lg:pt-20 small:flex-row small:items-start py-6 content-container"
       data-testid="category-container"
     >
       <RefinementList sortBy={sort} />

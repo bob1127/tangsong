@@ -42,6 +42,11 @@ const nextConfig = {
         protocol: "https",
         hostname: "medusa-server-testing.s3.us-east-1.amazonaws.com",
       },
+      // 👇 加入這段：發給 Supabase 的專屬圖片通行證！
+      {
+        protocol: "https",
+        hostname: "tddnvetxdilzmljbeowi.supabase.co",
+      },
       ...(S3_HOSTNAME && S3_PATHNAME
         ? [
             {
