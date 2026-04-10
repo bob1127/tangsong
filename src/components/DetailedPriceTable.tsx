@@ -21,7 +21,6 @@ export default function DetailedPriceTable() {
   useEffect(() => {
     const fetchPrice = async () => {
       try {
-        // 👇 關鍵資安與防呆修復：動態抓取環境變數網址，不寫死 localhost
         const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || ""
         if (!backendUrl) throw new Error("尚未設定後端 API 網址")
 
@@ -34,14 +33,18 @@ export default function DetailedPriceTable() {
 
         if (!res.ok) throw new Error("API 請求失敗")
 
-        // 確保拿到的是 JSON，避免 HTML 404 造成的 Unexpected token < 錯誤
         const contentType = res.headers.get("content-type")
         if (!contentType || !contentType.includes("application/json")) {
           throw new TypeError("回傳的格式不是 JSON，請確認 API 路徑是否正確")
         }
 
         const json = await res.json()
-        if (json.success) setData(json.data)
+        if (json.success) {
+          // 🌟 關鍵修復：處理後端傳回陣列的情況
+          // 如果是陣列，取第 0 筆 (最新)；如果不是，就直接用原本的物件
+          const latestData = Array.isArray(json.data) ? json.data[0] : json.data
+          setData(latestData)
+        }
       } catch (error) {
         console.error("無法取得金價:", error)
       } finally {

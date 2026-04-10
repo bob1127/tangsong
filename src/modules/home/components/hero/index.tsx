@@ -4,7 +4,7 @@ import Carousel from "../../../../components/HeroCarousel"
 import MarketTicker from "../../../../components/MarketTicker"
 import TradingViewChart from "../../../../components/TradingViewChart"
 import DetailedPriceTable from "../../../../components/DetailedPriceTable"
-
+import HistoricalTrendChart from "../../../../components/HistoricalTrendChart" // 你的路徑
 const Hero = () => {
   return (
     <div className="w-full border-b border-ui-border-base relative bg-ui-bg-subtle">
@@ -13,6 +13,7 @@ const Hero = () => {
       <MarketTicker />
       <TradingViewChart />
       <DetailedPriceTable />
+      <HistoricalTrendChart />
     </div>
   )
 }
