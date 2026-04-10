@@ -11,8 +11,8 @@ import { listRegions } from "@lib/data/regions"
 import { retrieveCustomer } from "@lib/data/customer"
 
 export const metadata: Metadata = {
-  title: "Profile",
-  description: "View and edit your Medusa Store profile.",
+  title: "個人資料",
+  description: "查看並編輯您的個人資料。",
 }
 
 export default async function Profile() {
@@ -26,11 +26,9 @@ export default async function Profile() {
   return (
     <div className="w-full" data-testid="profile-page-wrapper">
       <div className="mb-8 flex flex-col gap-y-4">
-        <h1 className="text-2xl-semi">Profile</h1>
+        <h1 className="text-2xl-semi">個人資料</h1>
         <p className="text-base-regular">
-          View and update your profile information, including your name, email,
-          and phone number. You can also update your billing address, or change
-          your password.
+          查看並更新您的個人資料，包含您的姓名、電子信箱與聯絡電話。您也可以在此更新帳單地址或修改密碼。
         </p>
       </div>
       <div className="flex flex-col gap-y-8 w-full">
@@ -51,4 +49,3 @@ export default async function Profile() {
 const Divider = () => {
   return <div className="w-full h-px bg-gray-200" />
 }
-;``

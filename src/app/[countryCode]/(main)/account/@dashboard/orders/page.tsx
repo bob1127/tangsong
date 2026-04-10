@@ -7,8 +7,8 @@ import Divider from "@modules/common/components/divider"
 import TransferRequestForm from "@modules/account/components/transfer-request-form"
 
 export const metadata: Metadata = {
-  title: "Orders",
-  description: "Overview of your previous orders.",
+  title: "訂單紀錄",
+  description: "查看您過往的訂單紀錄。",
 }
 
 export default async function Orders() {
@@ -21,10 +21,9 @@ export default async function Orders() {
   return (
     <div className="w-full" data-testid="orders-page-wrapper">
       <div className="mb-8 flex flex-col gap-y-4">
-        <h1 className="text-2xl-semi">Orders</h1>
+        <h1 className="text-2xl-semi">訂單紀錄</h1>
         <p className="text-base-regular">
-          View your previous orders and their status. You can also create
-          returns or exchanges for your orders if needed.
+          查看您的歷史訂單與目前的處理狀態。若有需要，您也可以在此申請退貨或換貨。
         </p>
       </div>
       <div>

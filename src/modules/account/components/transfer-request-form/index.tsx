@@ -27,11 +27,11 @@ export default function TransferRequestForm() {
       <div className="grid sm:grid-cols-2 items-center gap-x-8 gap-y-4 w-full">
         <div className="flex flex-col gap-y-1">
           <Heading level="h3" className="text-lg text-neutral-950">
-            Order transfers
+            綁定訂單
           </Heading>
           <Text className="text-base-regular text-neutral-500">
-            Can&apos;t find the order you are looking for?
-            <br /> Connect an order to your account.
+            找不到您要的訂單嗎？
+            <br /> 將歷史訂單綁定至您的帳號。
           </Text>
         </div>
         <form
@@ -39,12 +39,12 @@ export default function TransferRequestForm() {
           className="flex flex-col gap-y-1 sm:items-end"
         >
           <div className="flex flex-col gap-y-2 w-full">
-            <Input className="w-full" name="order_id" placeholder="Order ID" />
+            <Input className="w-full" name="order_id" placeholder="訂單編號" />
             <SubmitButton
               variant="secondary"
               className="w-fit whitespace-nowrap self-end"
             >
-              Request transfer
+              申請綁定
             </SubmitButton>
           </div>
         </form>
@@ -60,10 +60,10 @@ export default function TransferRequestForm() {
             <CheckCircleMiniSolid className="w-4 h-4 text-emerald-500" />
             <div className="flex flex-col gap-y-1">
               <Text className="text-medim-pl text-neutral-950">
-                Transfer for order {state.order?.id} requested
+                已提出訂單 {state.order?.id} 的綁定申請
               </Text>
               <Text className="text-base-regular text-neutral-600">
-                Transfer request email sent to {state.order?.email}
+                綁定確認信已發送至 {state.order?.email}
               </Text>
             </div>
           </div>
