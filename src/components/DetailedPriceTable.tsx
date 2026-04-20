@@ -12,15 +12,26 @@ interface MetalsData {
   base_gold_twd_qian?: number
   base_platinum_twd_qian?: number
   base_silver_twd_qian?: number
+  // 💡 從後端 API 收到的最終定價欄位
+  store_gold_sell?: number
+  store_gold_buy?: number
+  store_18k_buy?: number
+  store_14k_buy?: number
+  store_platinum_sell?: number
+  store_platinum_buy?: number
+  store_silver_sell?: number
+  store_silver_buy?: number
 }
 
 export default function DetailedPriceTable() {
   const [data, setData] = useState<MetalsData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false) // 💡 新增錯誤狀態
 
   useEffect(() => {
     const fetchPrice = async () => {
       try {
+        setError(false)
         const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || ""
         if (!backendUrl) throw new Error("尚未設定後端 API 網址")
 
@@ -40,13 +51,14 @@ export default function DetailedPriceTable() {
 
         const json = await res.json()
         if (json.success) {
-          // 🌟 關鍵修復：處理後端傳回陣列的情況
-          // 如果是陣列，取第 0 筆 (最新)；如果不是，就直接用原本的物件
           const latestData = Array.isArray(json.data) ? json.data[0] : json.data
           setData(latestData)
+        } else {
+          throw new Error("回傳格式不符預期")
         }
       } catch (error) {
         console.error("無法取得金價:", error)
+        setError(true)
       } finally {
         setLoading(false)
       }
@@ -62,27 +74,49 @@ export default function DetailedPriceTable() {
     )
   }
 
-  if (!data) return null
-
-  const rawGold = data.base_gold_twd_qian ?? data.gold_price_qian ?? 0
-  const rawPt = data.base_platinum_twd_qian ?? data.platinum_price_qian ?? 0
-  const rawAg = data.base_silver_twd_qian ?? data.silver_price_qian ?? 0
-  const rate = data.exchange_rate_usd_twd ?? 32.0
+  // 💡 安全取值，確保元件不消失
+  const rawGold = data?.base_gold_twd_qian ?? data?.gold_price_qian ?? 0
+  const rawPt = data?.base_platinum_twd_qian ?? data?.platinum_price_qian ?? 0
+  const rawAg = data?.base_silver_twd_qian ?? data?.silver_price_qian ?? 0
+  const rate = data?.exchange_rate_usd_twd ?? 32.0
   const updateTime =
-    data.fetch_timestamp ?? data.updated_at ?? new Date().toISOString()
+    data?.fetch_timestamp ?? data?.updated_at ?? new Date().toISOString()
 
-  const storeGoldSell = rawGold + 800
-  const storeGoldBuy = rawGold - 200
+  // 💡 優先使用後端算好的價格，若無則降級使用預設公式
+  const storeGoldSell =
+    data?.store_gold_sell ?? (rawGold > 0 ? rawGold + 800 : 0)
+  const storeGoldBuy = data?.store_gold_buy ?? (rawGold > 0 ? rawGold - 200 : 0)
+  const store18kBuy =
+    data?.store_18k_buy ??
+    (storeGoldBuy > 0 ? Math.round(storeGoldBuy * 0.6) : 0)
+  const store14kBuy =
+    data?.store_14k_buy ??
+    (storeGoldBuy > 0 ? Math.round(storeGoldBuy * 0.45) : 0)
+  const storePtSell =
+    data?.store_platinum_sell ?? (rawPt > 0 ? rawPt + 1500 : 0)
+  const storePtBuy = data?.store_platinum_buy ?? (rawPt > 0 ? rawPt - 500 : 0)
+
+  // 輔助函式：如果是 0 就顯示破折號
+  const formatPrice = (price: number) =>
+    price > 0 ? price.toLocaleString() : "---"
 
   return (
     <div className="w-full max-w-[1400px] mx-auto mt-12 px-4 lg:px-8 mb-20 font-mono">
       <div className="flex items-end justify-between mb-4 border-b border-[#D4AF37]/40 pb-3">
         <div>
-          <h2 className="text-2xl md:text-4xl font-serif text-[#5A1216] tracking-widest    ">
+          <h2 className="text-2xl md:text-4xl font-serif text-[#5A1216] tracking-widest flex items-center gap-3">
+            {error && (
+              <span className="flex h-3 w-3 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+              </span>
+            )}
             國際貴金屬與門市即時行情
           </h2>
           <p className="text-[#5A1216]/50 font-bold text-sm tracking-wider mt-2">
-            資料更新時間：{new Date(updateTime).toLocaleString("zh-TW")}
+            {error
+              ? "連線異常，顯示備用資料"
+              : `資料更新時間：${new Date(updateTime).toLocaleString("zh-TW")}`}
           </p>
         </div>
         <div className="text-right">
@@ -154,42 +188,75 @@ export default function DetailedPriceTable() {
 
         <div className="col-span-1 lg:col-span-3 space-y-6">
           <div className="bg-gradient-to-br from-[#73171C] to-[#4A0E12] border border-[#D4AF37]/50 rounded-lg overflow-hidden shadow-2xl">
-            <div className="bg-[#D4AF37]/10 px-4 py-3 text-sm font-bold text-[#D4AF37] border-b border-[#D4AF37]/30">
-              唐宋珠寶 實體門市牌告價 (新台幣 / 台錢)
+            <div className="bg-[#D4AF37]/10 px-4 py-3 text-sm font-bold text-[#D4AF37] border-b border-[#D4AF37]/30 flex justify-between items-center">
+              <span>唐宋珠寶 實體門市牌告價 (新台幣 / 台錢)</span>
+              <span className="text-xs font-normal text-[#E8DCC4]/60">
+                不強迫交易 ‧ 儀器精準檢測
+              </span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-center">
                 <thead className="bg-[#3A0A0E] text-[#D4AF37]/70 text-xs">
                   <tr>
-                    <th className="py-3 px-4 font-normal">商品項目</th>
-                    <th className="py-3 px-4 font-normal">單位</th>
-                    <th className="py-3 px-4 font-normal">賣出價 (NT$)</th>
-                    <th className="py-3 px-4 font-normal">回收價 (NT$)</th>
+                    <th className="py-3 px-4 font-normal w-1/4">商品項目</th>
+                    <th className="py-3 px-4 font-normal w-1/4">單位</th>
+                    <th className="py-3 px-4 font-normal w-1/4">
+                      賣出價 (NT$)
+                    </th>
+                    <th className="py-3 px-4 font-normal w-1/4">
+                      回收價 (NT$)
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr className="border-b border-[#D4AF37]/10 hover:bg-[#D4AF37]/10 transition-colors">
-                    <td className="py-5 px-4 text-[#D4AF37] font-bold text-base tracking-widest">
+                    <td className="py-4 px-4 text-[#D4AF37] font-bold text-base tracking-widest">
                       黃金飾金
                     </td>
-                    <td className="py-5 px-4 text-[#E8DCC4]/70">台錢</td>
-                    <td className="py-5 px-4 text-2xl font-bold text-[#FDF5E6]">
-                      {storeGoldSell.toLocaleString()}
+                    <td className="py-4 px-4 text-[#E8DCC4]/70">台錢</td>
+                    <td className="py-4 px-4 text-xl font-bold text-[#FDF5E6]">
+                      {formatPrice(storeGoldSell)}
                     </td>
-                    <td className="py-5 px-4 text-xl font-bold text-[#E8DCC4]/60">
-                      {storeGoldBuy.toLocaleString()}
+                    <td className="py-4 px-4 text-xl font-bold text-[#E8DCC4]/90">
+                      {formatPrice(storeGoldBuy)}
+                    </td>
+                  </tr>
+                  {/* 💡 加入 18K 金 */}
+                  <tr className="border-b border-[#D4AF37]/10 hover:bg-[#D4AF37]/10 transition-colors bg-[#000000]/10">
+                    <td className="py-3 px-4 text-[#D4AF37]/80 font-bold text-base tracking-widest">
+                      18K 金
+                    </td>
+                    <td className="py-3 px-4 text-[#E8DCC4]/70">台錢</td>
+                    <td className="py-3 px-4 text-base font-medium text-[#E8DCC4]/40">
+                      -
+                    </td>
+                    <td className="py-3 px-4 text-lg font-bold text-[#E8DCC4]/90">
+                      {formatPrice(store18kBuy)}
+                    </td>
+                  </tr>
+                  {/* 💡 加入 14K 金 */}
+                  <tr className="border-b border-[#D4AF37]/10 hover:bg-[#D4AF37]/10 transition-colors bg-[#000000]/10">
+                    <td className="py-3 px-4 text-[#D4AF37]/80 font-bold text-base tracking-widest">
+                      14K 金
+                    </td>
+                    <td className="py-3 px-4 text-[#E8DCC4]/70">台錢</td>
+                    <td className="py-3 px-4 text-base font-medium text-[#E8DCC4]/40">
+                      -
+                    </td>
+                    <td className="py-3 px-4 text-lg font-bold text-[#E8DCC4]/90">
+                      {formatPrice(store14kBuy)}
                     </td>
                   </tr>
                   <tr className="hover:bg-[#D4AF37]/10 transition-colors">
-                    <td className="py-5 px-4 text-[#E4E4E4] font-bold text-base tracking-widest">
+                    <td className="py-4 px-4 text-[#E4E4E4] font-bold text-base tracking-widest">
                       白金 Pt950
                     </td>
-                    <td className="py-5 px-4 text-[#E8DCC4]/70">台錢</td>
-                    <td className="py-5 px-4 text-xl font-bold text-[#FDF5E6]">
-                      {(rawPt + 1500).toLocaleString()}
+                    <td className="py-4 px-4 text-[#E8DCC4]/70">台錢</td>
+                    <td className="py-4 px-4 text-xl font-bold text-[#FDF5E6]">
+                      {formatPrice(storePtSell)}
                     </td>
-                    <td className="py-5 px-4 text-lg font-bold text-[#E8DCC4]/60">
-                      {(rawPt - 500).toLocaleString()}
+                    <td className="py-4 px-4 text-xl font-bold text-[#E8DCC4]/90">
+                      {formatPrice(storePtBuy)}
                     </td>
                   </tr>
                 </tbody>
@@ -208,8 +275,8 @@ export default function DetailedPriceTable() {
                     <th className="py-3 px-4 font-normal">商品名稱</th>
                     <th className="py-3 px-4 font-normal">目前行情</th>
                     <th className="py-3 px-4 font-normal">漲跌 (+/-)</th>
-                    <th className="py-3 px-4 font-normal">本日最高 (佔位)</th>
-                    <th className="py-3 px-4 font-normal">本日最低 (佔位)</th>
+                    <th className="py-3 px-4 font-normal">本日最高 (估位)</th>
+                    <th className="py-3 px-4 font-normal">本日最低 (估位)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -218,16 +285,16 @@ export default function DetailedPriceTable() {
                       黃金 XAU
                     </td>
                     <td className="py-3 px-4 text-[#FDF5E6] font-bold text-base">
-                      {rawGold.toLocaleString()}
+                      {formatPrice(rawGold)}
                     </td>
                     <td className="py-3 px-4 text-[#FF6B6B] font-medium">
                       +125.50 ▲
                     </td>
                     <td className="py-3 px-4 text-[#E8DCC4]/60">
-                      {(rawGold + 200).toLocaleString()}
+                      {formatPrice(rawGold + 200)}
                     </td>
                     <td className="py-3 px-4 text-[#E8DCC4]/60">
-                      {(rawGold - 150).toLocaleString()}
+                      {formatPrice(rawGold - 150)}
                     </td>
                   </tr>
                   <tr className="border-b border-[#D4AF37]/10 hover:bg-[#D4AF37]/10 transition-colors">
@@ -235,16 +302,16 @@ export default function DetailedPriceTable() {
                       白金 XPT
                     </td>
                     <td className="py-3 px-4 text-[#FDF5E6] font-bold text-base">
-                      {rawPt.toLocaleString()}
+                      {formatPrice(rawPt)}
                     </td>
                     <td className="py-3 px-4 text-[#4ADE80] font-medium">
                       -45.20 ▼
                     </td>
                     <td className="py-3 px-4 text-[#E8DCC4]/60">
-                      {(rawPt + 80).toLocaleString()}
+                      {formatPrice(rawPt + 80)}
                     </td>
                     <td className="py-3 px-4 text-[#E8DCC4]/60">
-                      {(rawPt - 60).toLocaleString()}
+                      {formatPrice(rawPt - 60)}
                     </td>
                   </tr>
                   <tr className="hover:bg-[#D4AF37]/10 transition-colors">
@@ -252,16 +319,16 @@ export default function DetailedPriceTable() {
                       白銀 XAG
                     </td>
                     <td className="py-3 px-4 text-[#FDF5E6] font-bold text-base">
-                      {rawAg.toLocaleString()}
+                      {formatPrice(rawAg)}
                     </td>
                     <td className="py-3 px-4 text-[#FF6B6B] font-medium">
                       +2.30 ▲
                     </td>
                     <td className="py-3 px-4 text-[#E8DCC4]/60">
-                      {(rawAg + 15).toLocaleString()}
+                      {formatPrice(rawAg + 15)}
                     </td>
                     <td className="py-3 px-4 text-[#E8DCC4]/60">
-                      {(rawAg - 10).toLocaleString()}
+                      {formatPrice(rawAg - 10)}
                     </td>
                   </tr>
                 </tbody>

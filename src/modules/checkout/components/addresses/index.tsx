@@ -1,3 +1,4 @@
+// 檔案路徑：src/modules/checkout/components/addresses/index.tsx
 "use client"
 
 import { setAddresses } from "@lib/data/cart"
@@ -49,17 +50,21 @@ const Addresses = ({
           收件地址
           {!isOpen && <CheckCircleSolid />}
         </Heading>
+        {/* ▼▼▼ 就是這裡，加上一個空標籤 <> 包住後面的元素 ▼▼▼ */}
         {!isOpen && cart?.shipping_address && (
-          <Text>
-            <button
-              onClick={handleEdit}
-              className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
-              data-testid="edit-address-button"
-            >
-              編輯
-            </button>
-          </Text>
+          <>
+            <Text>
+              <button
+                onClick={handleEdit}
+                className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
+                data-testid="edit-address-button"
+              >
+                編輯
+              </button>
+            </Text>
+          </>
         )}
+        {/* ▲▲▲ 加上空標籤 </> ▲▲▲ */}
       </div>
       {isOpen ? (
         <form action={formAction}>
@@ -80,7 +85,7 @@ const Addresses = ({
                   帳單地址
                 </Heading>
 
-                <BillingAddress cart={cart} />
+                <BillingAddress cart={cart} customer={customer} />
               </div>
             )}
             <SubmitButton className="mt-6" data-testid="submit-address-button">

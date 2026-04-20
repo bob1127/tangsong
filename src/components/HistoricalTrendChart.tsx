@@ -15,6 +15,13 @@ interface HistoricalData {
   base_gold_twd_qian: number
   base_platinum_twd_qian: number
   base_silver_twd_qian: number
+  // 💡 新增後端傳來的歷史定價
+  store_gold_sell?: number
+  store_gold_buy?: number
+  store_platinum_sell?: number
+  store_platinum_buy?: number
+  store_silver_sell?: number
+  store_silver_buy?: number
 }
 
 type MetalTab = "gold" | "platinum" | "silver"
@@ -27,9 +34,7 @@ export default function HistoricalTrendChart() {
   const [roi, setRoi] = useState<{ diff: number; percent: number } | null>(null)
 
   const chartContainerRef = useRef<HTMLDivElement>(null)
-  // 保存 chart 實例以便更新資料
   const chartRef = useRef<IChartApi | null>(null)
-  // 保存 series 實例以便更新資料
   const sellSeriesRef = useRef<ISeriesApi<"Area"> | null>(null)
   const buySeriesRef = useRef<ISeriesApi<"Area"> | null>(null)
 
@@ -39,21 +44,13 @@ export default function HistoricalTrendChart() {
     { label: "近 30 天", value: 30 },
   ]
 
-  // 定義門市的買賣價差參數 (可以隨時調整)
-  const SPREADS = {
-    gold: { sell: 800, buy: -200 },
-    platinum: { sell: 1500, buy: -500 },
-    silver: { sell: 40, buy: -20 }, // 假設白銀的價差
-  }
-
-  // 1. 抓取資料函數 (獨立出來，方便重複呼叫)
+  // 1. 抓取資料函數
   const fetchHistory = async (showLoading = true) => {
     if (showLoading) setLoading(true)
     try {
       const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || ""
       if (!backendUrl) return
 
-      // 加上時間戳防止快取
       const timestamp = new Date().getTime()
       const res = await fetch(
         `${backendUrl}/store/metals?days=${daysRange}&t=${timestamp}`,
@@ -78,26 +75,21 @@ export default function HistoricalTrendChart() {
     }
   }
 
-  // 初次載入與天數切換時抓取資料
   useEffect(() => {
     fetchHistory(true)
   }, [daysRange])
 
-  // 🌟 自動即時更新：每 15 分鐘 (900000 毫秒) 背景偷偷抓新資料
   useEffect(() => {
     const intervalId = setInterval(() => {
-      // 傳入 false 代表不要顯示轉圈圈，讓圖表無縫更新
       fetchHistory(false)
     }, 900000)
-
     return () => clearInterval(intervalId)
-  }, [daysRange]) // 天數切換時重新計時
+  }, [daysRange])
 
   // 2. 渲染 TradingView 圖表
   useEffect(() => {
     if (historyData.length === 0 || !chartContainerRef.current) return
 
-    // 準備兩組資料：賣出價與回收價
     const sellData: { time: Time; value: number }[] = []
     const buyData: { time: Time; value: number }[] = []
     const seenTimes = new Set<number>()
@@ -108,37 +100,36 @@ export default function HistoricalTrendChart() {
         new Date(b.fetch_timestamp).getTime()
     )
 
-    // 取得當前金屬的價差設定
-    const currentSpread = SPREADS[activeTab]
-
     sortedData.forEach((d) => {
       const unixTime = Math.floor(new Date(d.fetch_timestamp).getTime() / 1000)
 
-      let basePrice = 0
-      if (activeTab === "gold") basePrice = Number(d.base_gold_twd_qian) || 0
-      if (activeTab === "platinum")
-        basePrice = Number(d.base_platinum_twd_qian) || 0
-      if (activeTab === "silver")
-        basePrice = Number(d.base_silver_twd_qian) || 0
-
-      if (!seenTimes.has(unixTime) && basePrice > 0) {
+      if (!seenTimes.has(unixTime)) {
         seenTimes.add(unixTime)
 
-        // 🌟 分別計算賣出價(較高)與回收價(較低)
-        sellData.push({
-          time: unixTime as Time,
-          value: basePrice + currentSpread.sell,
-        })
-        buyData.push({
-          time: unixTime as Time,
-          value: basePrice + currentSpread.buy,
-        })
+        let sellPrice = 0
+        let buyPrice = 0
+
+        // 💡 優先抓取 API 算好的價格，如果沒有則套用預設降級方案
+        if (activeTab === "gold" && d.base_gold_twd_qian > 0) {
+          sellPrice = d.store_gold_sell ?? d.base_gold_twd_qian + 800
+          buyPrice = d.store_gold_buy ?? d.base_gold_twd_qian - 200
+        } else if (activeTab === "platinum" && d.base_platinum_twd_qian > 0) {
+          sellPrice = d.store_platinum_sell ?? d.base_platinum_twd_qian + 1500
+          buyPrice = d.store_platinum_buy ?? d.base_platinum_twd_qian - 500
+        } else if (activeTab === "silver" && d.base_silver_twd_qian > 0) {
+          sellPrice = d.store_silver_sell ?? d.base_silver_twd_qian + 40
+          buyPrice = d.store_silver_buy ?? d.base_silver_twd_qian - 20
+        }
+
+        if (sellPrice > 0 && buyPrice > 0) {
+          sellData.push({ time: unixTime as Time, value: sellPrice })
+          buyData.push({ time: unixTime as Time, value: buyPrice })
+        }
       }
     })
 
     if (sellData.length === 0) return
 
-    // 計算 ROI (投資回報率)
     if (sellData.length >= 2) {
       const firstPrice = sellData[0].value
       const lastPrice = sellData[sellData.length - 1].value
@@ -147,13 +138,12 @@ export default function HistoricalTrendChart() {
       setRoi({ diff, percent })
     }
 
-    // 如果圖表還沒建立，就建立它
     if (!chartRef.current) {
       const chart = createChart(chartContainerRef.current, {
         layout: {
           background: { type: ColorType.Solid, color: "transparent" },
           textColor: "#A8A29E",
-          attributionLogo: false, // 隱藏浮水印
+          attributionLogo: false,
         },
         grid: {
           vertLines: { visible: false },
@@ -169,16 +159,12 @@ export default function HistoricalTrendChart() {
           timeVisible: true,
           secondsVisible: false,
         },
-        crosshair: {
-          mode: 1, // Magnet mode (十字線會吸附到資料點上)
-        },
+        crosshair: { mode: 1 },
       })
       chartRef.current = chart
 
-      // 建立「賣出價」(上方的線)
-      // 💡 這裡換成正確的 V5 寫法
       const sellSeries = chart.addSeries(AreaSeries, {
-        lineColor: "#DC2626", // 紅色代表漲/賣出
+        lineColor: "#DC2626",
         topColor: "rgba(220, 38, 38, 0.2)",
         bottomColor: "rgba(220, 38, 38, 0.0)",
         lineWidth: 2,
@@ -186,17 +172,15 @@ export default function HistoricalTrendChart() {
       })
       sellSeriesRef.current = sellSeries
 
-      // 建立「回收價」(下方的線)
-      // 💡 這裡換成正確的 V5 寫法
       const buySeries = chart.addSeries(AreaSeries, {
-        lineColor: "#16A34A", // 綠色代表回收
+        lineColor: "#16A34A",
         topColor: "rgba(22, 163, 74, 0.2)",
         bottomColor: "rgba(22, 163, 74, 0.0)",
         lineWidth: 2,
         priceFormat: { type: "price", precision: 0, minMove: 1 },
       })
       buySeriesRef.current = buySeries
-      // RWD 處理
+
       const handleResize = () => {
         if (chartContainerRef.current) {
           chart.applyOptions({ width: chartContainerRef.current.clientWidth })
@@ -205,20 +189,13 @@ export default function HistoricalTrendChart() {
       window.addEventListener("resize", handleResize)
     }
 
-    // 更新圖表資料
     if (sellSeriesRef.current && buySeriesRef.current) {
       sellSeriesRef.current.setData(sellData)
       buySeriesRef.current.setData(buyData)
       chartRef.current?.timeScale().fitContent()
     }
+  }, [historyData, activeTab])
 
-    // Cleanup 只在元件真正卸載時執行
-    return () => {
-      // 這裡不直接刪除圖表，而是保留實例供下次資料更新時重複使用
-    }
-  }, [historyData, activeTab]) // 當資料或 Tab 改變時重新計算
-
-  // 獨立的 Cleanup：當整個組件被拔掉時才清掉 TradingView 實體
   useEffect(() => {
     return () => {
       if (chartRef.current) {
@@ -242,7 +219,6 @@ export default function HistoricalTrendChart() {
   return (
     <div className="w-full max-w-[1400px] mx-auto px-4 lg:px-8 mb-20 font-sans">
       <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm">
-        {/* Header 控制區 */}
         <div className="flex flex-col md:flex-row items-center justify-between p-4 md:p-6 border-b border-stone-100 bg-stone-50/50 gap-4">
           <div className="flex p-1 bg-stone-200/50 rounded-lg">
             <button
@@ -295,7 +271,6 @@ export default function HistoricalTrendChart() {
           </div>
         </div>
 
-        {/* 圖表呈現區塊 */}
         <div className="p-4 md:p-6 relative bg-white">
           <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="flex items-baseline gap-2">
@@ -307,7 +282,6 @@ export default function HistoricalTrendChart() {
               </span>
             </div>
 
-            {/* ROI 投資回報率顯示 */}
             {roi && (
               <div className="flex items-center gap-2 bg-stone-50 px-3 py-1.5 rounded-lg border border-stone-100">
                 <span className="text-sm text-stone-500">所選期間趨勢：</span>
@@ -325,7 +299,6 @@ export default function HistoricalTrendChart() {
             )}
           </div>
 
-          {/* 圖例 Legend */}
           <div className="flex gap-6 mb-4 px-2">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-[#DC2626]"></div>
@@ -341,14 +314,12 @@ export default function HistoricalTrendChart() {
             </div>
           </div>
 
-          {/* TradingView 圖表容器 */}
           <div className="h-[400px] md:h-[500px] w-full relative group">
             {loading && !chartRef.current && (
               <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/60 backdrop-blur-sm rounded-lg">
                 <div className="animate-spin rounded-full h-10 w-10 border-4 border-stone-200 border-t-[#D4AF37]"></div>
               </div>
             )}
-
             <div
               ref={chartContainerRef}
               className="w-full h-full cursor-crosshair"
