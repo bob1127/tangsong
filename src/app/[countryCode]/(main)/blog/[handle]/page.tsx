@@ -164,7 +164,7 @@ export default async function BlogPostPage({
                 w-full max-w-none
                 
                 /* 1. 基礎文字設定 (直接套用到整個區塊，保證行高和字距絕對生效) */
-                text-[#222] 
+                
                 text-[13px] md:text-[13.5px] 
                 leading-[2.8] md:leading-[3] 
                 tracking-[0.1em] md:tracking-[0.12em] 
