@@ -276,7 +276,7 @@ export default function ContactPage() {
                   100<span className="text-xl">%</span>
                 </div>
                 <div className="text-[11px] text-[#D4AF37] font-bold tracking-widest">
-                  公開透明流程
+                  公開透明
                 </div>
               </div>
             </div>
