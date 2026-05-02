@@ -1,11 +1,22 @@
 import { Metadata } from "next"
 import Hero from "@modules/home/components/hero"
 import { getRegion } from "@lib/data/regions"
+// 💡 引入我們剛剛做好的彈窗元件 (請依你的實際路徑調整)
+import TradeNoticePopup from "../../../components/TradeNoticePopup"
 
+// ==========================
+// 1. 首頁 SEO 設定 (強化版 Metadata)
+// ==========================
 export const metadata: Metadata = {
-  title: "唐宋珠寶 | 國際貴金屬與門市即時行情",
-  description: "提供最新國際黃金、白金、白銀即時報價與門市牌告價。",
+  // ... 保留你原本寫好的 metadata ...
 }
+
+// ==========================
+// 2. 首頁結構化資料 (寫死為純字串，避免 React 崩潰)
+// ==========================
+const schemaJson = `
+// ... 保留你原本寫好的 schemaJson ...
+`
 
 export default async function Home(props: {
   params: Promise<{ countryCode: string }>
@@ -15,7 +26,6 @@ export default async function Home(props: {
 
   const region = await getRegion(countryCode)
 
-  // 🚨 偵錯模式：如果找不到地區，顯示這段文字而不是白畫面
   if (!region) {
     return (
       <div className="h-[50vh] flex flex-col items-center justify-center bg-black text-white text-xl text-center p-10">
@@ -32,10 +42,18 @@ export default async function Home(props: {
     )
   }
 
-  // 如果成功找到地區，就正常顯示你的金價面板
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: schemaJson }}
+      />
+
+      {/* 主視覺元件 */}
       <Hero />
+
+      {/* 🚀 加入交易須知彈窗：會固定在畫面左下角，且關閉後不再出現 */}
+      <TradeNoticePopup />
     </>
   )
 }

@@ -10,9 +10,8 @@ const Hero = () => {
   return (
     <div className="w-full border-b border-ui-border-base relative bg-ui-bg-subtle">
       <Carousel />
-      {/* 拔掉原本的 fixed wrapper，直接呼叫元件 */}
       <MarketTicker />
-      <TradingViewChart />
+
       <DetailedPriceTable />
       <HistoricalTrendChart />
       <News />

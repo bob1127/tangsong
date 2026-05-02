@@ -148,7 +148,7 @@ export default function MarketTicker() {
   }
 
   return (
-    <div className="fixed right-2 md:right-6 top-1/2 -translate-y-1/2 z-[999] flex flex-col gap-4 w-[310px] md:w-[330px] p-5 bg-[#3A0A0E]/95 backdrop-blur-md border border-[#D4AF37]/40 rounded-2xl transition-all duration-500 hover:border-[#D4AF37]/70 transform origin-right scale-90 md:scale-100 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+    <div className="fixed right-2 md:right-6 top-1/2 -translate-y-1/2 z-[999] flex flex-col gap-4 w-[310px] md:w-[330px] p-5 bg-[#3A0A0E]/95 backdrop-blur-md border border-[#D4AF37]/40 transition-all duration-500 hover:border-[#D4AF37]/70 transform origin-right scale-90 md:scale-100 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
       {/* Header */}
       <div className="border-b border-[#D4AF37]/30 pb-2 relative">
         <div className="flex items-center justify-between pr-6">

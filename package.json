@@ -15,6 +15,7 @@
     "analyze": "ANALYZE=true next build"
   },
   "dependencies": {
+    "@gsap/react": "^2.1.2",
     "@headlessui/react": "^2.2.0",
     "@medusajs/icons": "latest",
     "@medusajs/js-sdk": "latest",
@@ -22,8 +23,9 @@
     "@radix-ui/react-accordion": "^1.2.1",
     "@stripe/react-stripe-js": "^5.3.0",
     "@stripe/stripe-js": "^8.2.0",
+    "@tailwindcss/typography": "^0.5.19",
     "apexcharts": "^5.10.5",
-    "gsap": "^3.14.2",
+    "gsap": "^3.15.0",
     "lightweight-charts": "^5.1.0",
     "lodash": "^4.17.21",
     "next": "15.3.9",
@@ -35,6 +37,7 @@
     "react-country-flag": "^3.1.0",
     "react-dom": "19.0.4",
     "recharts": "^3.8.1",
+    "resend": "^6.12.2",
     "server-only": "^0.0.1",
     "tailwindcss-radix": "^2.8.0",
     "three": "^0.183.2",

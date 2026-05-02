@@ -11,6 +11,9 @@ import React from "react"
 const LocalizedClientLink = ({
   children,
   href,
+  className,
+  onClick,
+  passHref,
   ...props
 }: {
   children?: React.ReactNode
@@ -22,8 +25,17 @@ const LocalizedClientLink = ({
 }) => {
   const { countryCode } = useParams()
 
+  // 🚀 關鍵修改 3：判斷如果當前語系是 "tw"，就將 prefix 設為空白 (不加上 /tw)
+  const prefix = countryCode === "tw" ? "" : `/${countryCode}`
+
   return (
-    <Link href={`/${countryCode}${href}`} {...props}>
+    <Link
+      href={`${prefix}${href}`}
+      className={className}
+      onClick={onClick}
+      passHref={passHref}
+      {...props}
+    >
       {children}
     </Link>
   )

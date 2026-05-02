@@ -218,7 +218,7 @@ export default function HistoricalTrendChart() {
 
   return (
     <div className="w-full max-w-[1400px] mx-auto px-4 lg:px-8 mb-20 font-sans">
-      <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm">
+      <div className="bg-white border border-stone-200  overflow-hidden shadow-sm">
         <div className="flex flex-col md:flex-row items-center justify-between p-4 md:p-6 border-b border-stone-100 bg-stone-50/50 gap-4">
           <div className="flex p-1 bg-stone-200/50 rounded-lg">
             <button
