@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 import HeroSlider from "../../../../components/Slider"
 import HeroCarousel from "../../../../components/HeroSlider"
-
+import Feature from "../../../../components/CollectionShowcase"
 export const metadata: Metadata = {
   title: "關於唐宋珠寶 | 台北龍山寺對面老字號",
   description:
@@ -50,96 +50,10 @@ export default function ContactPage() {
     <div className="w-full bg-[#FDF5E6]/30 font-sans overflow-hidden">
       {/* 頂部輪播 */}
       <HeroSlider />
-
-      {/* 區塊一：專業檢測 */}
-      <section className="py-20 md:py-32 px-6 md:px-12 max-w-[1400px] mx-auto border-b border-[#D4AF37]/10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="flex items-center gap-4 mb-2">
-              <span className="w-8 h-[2px] bg-[#D4AF37]"></span>
-              <span className="text-[#D4AF37] font-bold tracking-widest text-sm uppercase">
-                Professional Testing
-              </span>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-serif text-[#5A1216] font-bold leading-snug tracking-wide">
-              科學儀器精準檢測
-              <br />
-              純度價值 透明呈現
-            </h2>
-            <div className="space-y-5 text-stone-600 leading-relaxed text-[15px] md:text-base text-justify">
-              <p>
-                在交易黃金與 K
-                金時，最重要的是「純度」與「透明」。本店特別引進專業級檢測設備，能迅速、準確分析飾品成分，不僅判定純度精準，還能完整呈現含金比例。
-              </p>
-              <p>
-                全程為非破壞式檢測，不會損傷您的珠寶與飾品，讓您在確認價值的同時，依然能保存原貌。十多年來，我們始終秉持誠信經營的理念，杜絕憑肉眼估價的不透明流程。
-              </p>
-              <p>
-                所有價格公開、公平，檢測數據當場呈現，沒有任何隱藏費用，讓您在交易過程中感受最真誠的保障。
-              </p>
-            </div>
-          </div>
-
-          <div className="relative order-first lg:order-last mb-10 lg:mb-0 max-w-[500px] mx-auto lg:ml-auto w-full">
-            <div className="relative   bg-white p-3  ">
-              <div className=" overflow-hidden aspect-[4/5] relative bg-stone-100">
-                <img
-                  src="/images/Photoroom_20260422_115847.jpg.webp"
-                  alt="專業檢測設備"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-[#D4AF37]/10 to-transparent rounded-full blur-3xl -z-10"></div>
-          </div>
-        </div>
-      </section>
+      <Feature />
 
       {/* 💡 新增區塊：收購流程 (完美復刻參考圖的卡片排列) */}
       <section className="py-20 md:py-24 px-6 md:px-12 max-w-[1400px] mx-auto border-b border-[#D4AF37]/10">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <h2 className="text-3xl md:text-4xl font-serif text-[#5A1216] font-bold tracking-widest mb-4">
-            「安心滿意」的收購流程
-          </h2>
-          <p className="text-stone-500 text-sm md:text-base">
-            我們提供最標準化且透明的五步驟，讓您的每一件珍藏都能獲得最公正的評估。
-          </p>
-        </div>
-
-        {/* 卡片陣列 (5欄式設計，手機版自動換行) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-          {PROCESS_STEPS.map((step, idx) => (
-            <div
-              key={idx}
-              className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)]   transform  transition-all duration-300 relative border border-stone-100 flex flex-col"
-            >
-              {/* 左上角數字標籤 (復刻參考圖設計) */}
-              <div className="absolute top-0 left-0 bg-white text-[#D4AF37] font-bold text-lg px-4 py-2 rounded-br-2xl shadow-sm z-10 font-serif">
-                {step.step}
-              </div>
-
-              {/* 卡片圖片 */}
-              <div className="h-40 w-full bg-stone-100 relative overflow-hidden">
-                <img
-                  src={step.image}
-                  alt={step.title}
-                  className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-300"
-                />
-              </div>
-
-              {/* 卡片文字 */}
-              <div className="p-6 flex-grow flex flex-col">
-                <h3 className="text-[#3A0A0E] font-bold text-lg mb-3 tracking-wider">
-                  {step.title}
-                </h3>
-                <p className="text-stone-500 text-[13px] leading-relaxed">
-                  {step.description}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-
         {/* 💡 新增：為什麼需要熔融檢測 (信任感保證區塊) */}
         <div className="mt-16 bg-gradient-to-br from-[#5A1216] to-[#3A0A0E]   p-8 md:p-12 lg:p-16 shadow-2xl relative overflow-hidden">
           {/* 背景裝飾 */}
@@ -203,82 +117,6 @@ export default function ContactPage() {
                 alt="安心保障"
                 className="w-full h-full object-cover"
               />
-            </div>
-          </div>
-        </div>
-      </section>
-      <HeroCarousel />
-      {/* 區塊二：深耕在地十年 */}
-      <section className="py-20 md:py-24 px-6 md:px-12 max-w-[1400px] mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
-          <div className="grid grid-cols-2 gap-3 md:gap-4 relative max-w-[600px] mx-auto w-full">
-            <div className="space-y-3 md:space-y-4 mt-8">
-              <img
-                src="https://images.unsplash.com/photo-1617038220319-276d3cfab638?q=80&w=800&auto=format&fit=crop"
-                className="rounded-3xl shadow-md w-full aspect-[4/5] object-cover hover:scale-[1.02] transition-transform duration-500"
-                alt="珠寶飾品"
-              />
-              <img
-                src="https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?q=80&w=800&auto=format&fit=crop"
-                className="rounded-3xl shadow-md w-full aspect-square object-cover hover:scale-[1.02] transition-transform duration-500"
-                alt="金飾細節"
-              />
-            </div>
-            <div className="space-y-3 md:space-y-4">
-              <img
-                src="https://images.unsplash.com/photo-1589118949245-7d38baf380d6?q=80&w=800&auto=format&fit=crop"
-                className="rounded-3xl shadow-md w-full aspect-square object-cover hover:scale-[1.02] transition-transform duration-500"
-                alt="黃金金條"
-              />
-              <img
-                src="https://images.unsplash.com/photo-1599643477877-530eb83abc8e?q=80&w=800&auto=format&fit=crop"
-                className="rounded-3xl shadow-md w-full aspect-[4/5] object-cover hover:scale-[1.02] transition-transform duration-500"
-                alt="高價收購"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-            <div className="flex items-center gap-4 mb-2">
-              <span className="w-8 h-[2px] bg-[#D4AF37]"></span>
-              <span className="text-[#D4AF37] font-bold tracking-widest text-sm uppercase">
-                Our Promise
-              </span>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-serif text-[#5A1216] font-bold leading-snug tracking-wide">
-              深耕在地十餘年
-              <br />
-              口碑與誠信的傳承
-            </h2>
-            <div className="space-y-5 text-stone-600 leading-relaxed text-[15px] md:text-base text-justify">
-              <p>
-                唐宋珠寶深耕在地十餘年，始終堅持提供顧客高價收購與公開透明的交易流程。
-              </p>
-              <p>
-                每一件商品，我們都會詳細說明，讓您清楚了解成色、價格與評估方式，有不明白想了解的，都會為您解答。
-              </p>
-              <p>
-                一路走來，憑藉著老顧客的支持與口碑介紹，讓我們持續服務至今。誠摯邀請您，給我們一個為您服務的機會。
-              </p>
-            </div>
-
-            <div className="pt-8 grid grid-cols-2 gap-4">
-              <div className="bg-white border border-[#D4AF37]/20 p-5 rounded-2xl shadow-sm text-center transform transition-all">
-                <div className="text-3xl font-extrabold text-[#D4AF37] mb-1 font-serif">
-                  10<span className="text-xl">+</span>
-                </div>
-                <div className="text-[11px] text-[#5A1216] font-bold tracking-widest">
-                  深耕在地年資
-                </div>
-              </div>
-              <div className="bg-[#5A1216] border border-[#5A1216] p-5 rounded-2xl shadow-sm text-center transform transition-all">
-                <div className="text-3xl font-extrabold text-[#FDF5E6] mb-1 font-serif">
-                  100<span className="text-xl">%</span>
-                </div>
-                <div className="text-[11px] text-[#D4AF37] font-bold tracking-widest">
-                  公開透明
-                </div>
-              </div>
             </div>
           </div>
         </div>

@@ -12,7 +12,6 @@ interface MetalsData {
   base_gold_twd_qian?: number
   base_platinum_twd_qian?: number
   base_silver_twd_qian?: number
-  // 💡 從後端 API 收到的最終定價欄位
   store_gold_sell?: number
   store_gold_buy?: number
   store_platinum_sell?: number
@@ -21,7 +20,6 @@ interface MetalsData {
   store_silver_buy?: number
 }
 
-// 預設的備用加減價 (當後端沒傳資料時的降級方案)
 const STORE_SPREAD = {
   gold_sell_premium: 800,
   gold_buy_discount: -200,
@@ -45,14 +43,24 @@ export default function MarketTicker() {
     const fetchPrice = async () => {
       try {
         setError(false)
-        const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || ""
-        if (!backendUrl) throw new Error("尚未設定後端 API 網址")
+        // 🚀 核心修正：加入預設 localhost:9000，確保永遠找得到後端
+        const backendUrl =
+          process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
+        const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
 
-        const res = await fetch(`${backendUrl}/store/metals`, {
+        // 🚀 加上時間戳防快取
+        const targetUrl = `${backendUrl}/store/metals?nocache=${new Date().getTime()}`
+
+        const res = await fetch(targetUrl, {
+          method: "GET",
           headers: {
-            "x-publishable-api-key": process.env
-              .NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string,
+            "Content-Type": "application/json",
+            "x-publishable-api-key": apiKey,
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+            Expires: "0",
           },
+          cache: "no-store",
         })
 
         if (!res.ok) throw new Error("API 請求失敗")
@@ -95,7 +103,6 @@ export default function MarketTicker() {
   const rawAg = data?.base_silver_twd_qian ?? data?.silver_price_qian ?? 0
   const rate = data?.exchange_rate_usd_twd ?? 32.0
 
-  // 💡 核心改變：優先讀取後端算好的價格，若無則降級使用預設公式
   const goldSell =
     data?.store_gold_sell ??
     (rawGold > 0 ? rawGold + STORE_SPREAD.gold_sell_premium : 0)
@@ -115,6 +122,7 @@ export default function MarketTicker() {
     data?.store_silver_buy ??
     (rawAg > 0 ? rawAg + STORE_SPREAD.silver_buy_discount : 0)
 
+  // 💡 如果是 0，這裡會顯示 ---
   const formatPrice = (price: number) =>
     price > 0 ? price.toLocaleString() : "---"
 

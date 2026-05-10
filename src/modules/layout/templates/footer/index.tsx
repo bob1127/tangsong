@@ -17,9 +17,13 @@ export default function Footer() {
   ]
 
   const collections = [
-    { id: "c1", title: "隱私條款", handle: "wedding" },
-    { id: "c2", title: "關於收購/鑒價", handle: "daily" },
-    { id: "c3", title: "門市", handle: "recycle" },
+    { id: "c1", title: "隱私條款", handle: "/privacy" },
+    { id: "c2", title: "關於收購/鑒價", handle: "/contact" },
+    {
+      id: "c3",
+      title: "門市",
+      handle: "https://maps.app.goo.gl/nte538v4k5nk2aCx8",
+    },
   ]
 
   return (
@@ -176,7 +180,7 @@ export default function Footer() {
                 {collections.map((c) => (
                   <li key={c.id}>
                     <LocalizedClientLink
-                      href={`/collections/${c.handle}`}
+                      href={`${c.handle}`}
                       className="hover:text-[#82111F] transition-colors duration-300"
                     >
                       {c.title}
@@ -220,17 +224,10 @@ export default function Footer() {
                     最新消息
                   </a>
                 </li>
+
                 <li>
                   <a
-                    href="#"
-                    className="hover:text-[#82111F] transition-colors duration-300"
-                  >
-                    焦點新聞
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
+                    href="/contact"
                     className="hover:text-[#82111F] transition-colors duration-300"
                   >
                     聯絡我們
@@ -238,7 +235,8 @@ export default function Footer() {
                 </li>
                 <li className="mt-4 flex gap-4">
                   <a
-                    href="#"
+                    target="_blank"
+                    href="https://www.facebook.com/profile.php?id=100057131423286"
                     className="hover:text-[#82111F] transition-colors"
                   >
                     <svg

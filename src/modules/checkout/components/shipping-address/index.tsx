@@ -107,15 +107,7 @@ const ShippingAddress = ({
 
       <div className="grid grid-cols-2 gap-4">
         {/* 姓名與電話 */}
-        <Input
-          label="姓氏"
-          name="shipping_address.last_name"
-          autoComplete="family-name"
-          value={formData["shipping_address.last_name"]}
-          onChange={handleChange}
-          required
-          data-testid="shipping-last-name-input"
-        />
+
         <Input
           label="名字"
           name="shipping_address.first_name"
@@ -142,7 +134,6 @@ const ShippingAddress = ({
           autoComplete="address-level1"
           value={formData["shipping_address.province"]}
           onChange={handleChange}
-          required
           data-testid="shipping-province-input"
         />
         <Input
@@ -151,7 +142,6 @@ const ShippingAddress = ({
           autoComplete="address-level2"
           value={formData["shipping_address.city"]}
           onChange={handleChange}
-          required
           data-testid="shipping-city-input"
         />
         <Input
@@ -160,11 +150,9 @@ const ShippingAddress = ({
           autoComplete="postal-code"
           value={formData["shipping_address.postal_code"]}
           onChange={handleChange}
-          required
           data-testid="shipping-postal-code-input"
         />
 
-        {/* 公司名稱 */}
         <Input
           label="公司/機構名稱 (選填)"
           name="shipping_address.company"
@@ -183,13 +171,12 @@ const ShippingAddress = ({
           autoComplete="address-line1"
           value={formData["shipping_address.address_1"]}
           onChange={handleChange}
-          required
           data-testid="shipping-address-input"
         />
       </div>
 
       {/* 同帳單地址的勾選框 */}
-      <div className="mt-8">
+      {/* <div className="mt-8">
         <Checkbox
           label="帳單地址與收件地址相同"
           name="same_as_billing"
@@ -197,7 +184,7 @@ const ShippingAddress = ({
           onChange={onChange}
           data-testid="billing-address-checkbox"
         />
-      </div>
+      </div> */}
     </>
   )
 }

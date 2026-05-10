@@ -10,17 +10,19 @@ interface MetalsData {
   gold_price_qian?: number
   platinum_price_qian?: number
   silver_price_qian?: number
+  palladium_price_qian?: number
   base_gold_twd_qian?: number
   base_platinum_twd_qian?: number
   base_silver_twd_qian?: number
-  store_gold_sell?: number
-  store_gold_buy?: number
-  store_18k_buy?: number
-  store_14k_buy?: number
-  store_platinum_sell?: number
-  store_platinum_buy?: number
-  store_silver_sell?: number
-  store_silver_buy?: number
+  base_palladium_twd_qian?: number
+  gold_sell?: number
+  gold_buy?: number
+  k18_buy?: number
+  k14_buy?: number
+  pt950_sell?: number
+  pt950_buy?: number
+  pd_sell?: number
+  pd_buy?: number
 }
 
 export default function DetailedPriceTable() {
@@ -33,17 +35,28 @@ export default function DetailedPriceTable() {
     const fetchPrice = async () => {
       try {
         setError(false)
-        const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || ""
-        if (!backendUrl) throw new Error("尚未設定後端 API 網址")
+        const backendUrl =
+          process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
+        const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
 
-        const res = await fetch(`${backendUrl}/store/metals`, {
+        // 🚀 核彈級防快取網址
+        const targetUrl = `${backendUrl}/store/metals?nocache=${new Date().getTime()}`
+
+        const res = await fetch(targetUrl, {
+          method: "GET",
           headers: {
-            "x-publishable-api-key": process.env
-              .NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string,
+            "Content-Type": "application/json",
+            "x-publishable-api-key": apiKey,
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+            Expires: "0",
           },
+          cache: "no-store",
         })
 
-        if (!res.ok) throw new Error("API 請求失敗")
+        if (!res.ok) {
+          throw new Error("API 請求失敗")
+        }
 
         const contentType = res.headers.get("content-type")
         if (!contentType || !contentType.includes("application/json")) {
@@ -89,34 +102,48 @@ export default function DetailedPriceTable() {
   const rawGold = data?.base_gold_twd_qian ?? data?.gold_price_qian ?? 0
   const rawPt = data?.base_platinum_twd_qian ?? data?.platinum_price_qian ?? 0
   const rawAg = data?.base_silver_twd_qian ?? data?.silver_price_qian ?? 0
+  const rawPd = data?.base_palladium_twd_qian ?? data?.palladium_price_qian ?? 0
+
   const rate = data?.exchange_rate_usd_twd ?? 32.0
   const updateTime =
     data?.fetch_timestamp ?? data?.updated_at ?? new Date().toISOString()
 
-  const storeGoldSell =
-    data?.store_gold_sell ?? (rawGold > 0 ? rawGold + 800 : 0)
-  const storeGoldBuy = data?.store_gold_buy ?? (rawGold > 0 ? rawGold - 200 : 0)
+  // 門市牌告價
+  const storeGoldSell = data?.gold_sell ?? (rawGold > 0 ? rawGold + 800 : 0)
+  const storeGoldBuy = data?.gold_buy ?? (rawGold > 0 ? rawGold - 200 : 0)
   const store18kBuy =
-    data?.store_18k_buy ??
-    (storeGoldBuy > 0 ? Math.round(storeGoldBuy * 0.6) : 0)
+    data?.k18_buy ?? (storeGoldBuy > 0 ? Math.round(storeGoldBuy * 0.6) : 0)
   const store14kBuy =
-    data?.store_14k_buy ??
-    (storeGoldBuy > 0 ? Math.round(storeGoldBuy * 0.45) : 0)
-  const storePtSell =
-    data?.store_platinum_sell ?? (rawPt > 0 ? rawPt + 1500 : 0)
-  const storePtBuy = data?.store_platinum_buy ?? (rawPt > 0 ? rawPt - 500 : 0)
+    data?.k14_buy ?? (storeGoldBuy > 0 ? Math.round(storeGoldBuy * 0.45) : 0)
+  const storePtSell = data?.pt950_sell ?? (rawPt > 0 ? rawPt + 1500 : 0)
+  const storePtBuy = data?.pt950_buy ?? (rawPt > 0 ? rawPt - 500 : 0)
+  const storePdSell = data?.pd_sell ?? (rawPd > 0 ? rawPd + 1500 : 0)
+  const storePdBuy = data?.pd_buy ?? (rawPd > 0 ? rawPd - 500 : 0)
 
+  // 國際現貨價
   const intlGoldBuy = rawGold > 0 ? rawGold - 30 : 0
   const intlGoldSell = rawGold > 0 ? rawGold + 30 : 0
   const intlPtBuy = rawPt > 0 ? rawPt - 50 : 0
   const intlPtSell = rawPt > 0 ? rawPt + 50 : 0
   const intlAgBuy = rawAg > 0 ? rawAg - 0.5 : 0
   const intlAgSell = rawAg > 0 ? rawAg + 0.5 : 0
+  const intlPdBuy = rawPd > 0 ? rawPd - 50 : 0
+  const intlPdSell = rawPd > 0 ? rawPd + 50 : 0
 
-  const formatPrice = (price: number) =>
-    price > 0 ? price.toLocaleString() : "---"
+  // 🚀 核心修正：將 0 替換為溫馨提示文字，並縮小字體防止表格跑版
+  const formatPrice = (price: number) => {
+    if (price === 0) {
+      return (
+        <span className="text-xs md:text-sm font-normal text-[#E8DCC4]/60 tracking-normal whitespace-nowrap">
+          尚待公佈，有疑問請聯繫我們
+        </span>
+      )
+    }
+    return price > 0 ? price.toLocaleString() : "---"
+  }
+
   const formatFinancial = (price: number) =>
-    price > 0
+    price > 0 || price === 0
       ? price.toLocaleString(undefined, {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
@@ -126,16 +153,13 @@ export default function DetailedPriceTable() {
   return (
     <>
       {isChartOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center   animate-in fade-in duration-200 p-2 md:p-4">
-          {/* 💡 擴大視窗比例：改為高度 90vh，且將內部背景改為白色以融合你的 Chart */}
-          <div className="relative w-full md:w-[90vw] max-w-[1600px] h-[90vh] bg-white border border-[#D4AF37]/50  flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-            {/* 💡 獨立的 Header 與關閉按鈕區塊 */}
-            <div className="flex justify-between items-center px-6 pt-4  shrink-0">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center animate-in fade-in duration-200 p-2 md:p-4">
+          <div className="relative w-full md:w-[90vw] max-w-[1600px] h-[90vh] bg-white border border-[#D4AF37]/50 flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center px-6 pt-4 shrink-0">
               <div className="flex items-center gap-3"></div>
               <button
                 onClick={() => setIsChartOpen(false)}
-                className="text-stone-800 hover:text-black   p-2  transition-all duration-200 flex items-center justify-center group"
-                aria-label="關閉圖表"
+                className="text-stone-800 hover:text-black p-2 transition-all duration-200 flex items-center justify-center group"
               >
                 <svg
                   className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300"
@@ -152,8 +176,6 @@ export default function DetailedPriceTable() {
                 </svg>
               </button>
             </div>
-
-            {/* 圖表容器：關鍵在於 overflow-y-auto，若內容過長可以自由滾動，不怕裁切 */}
             <div className="flex-1 w-full relative overflow-y-auto bg-stone-50">
               <TradingViewChart />
             </div>
@@ -187,7 +209,6 @@ export default function DetailedPriceTable() {
               美元匯率基準:{" "}
               <span className="text-[#FDF5E6] ml-1">{rate.toFixed(2)}</span>
             </span>
-
             <button
               onClick={() => setIsChartOpen(true)}
               className="group flex items-center gap-2 bg-gradient-to-r from-[#D4AF37] to-[#B8942E] hover:from-[#FDF5E6] hover:to-[#D4AF37] text-[#3A0A0E] text-xs font-bold px-4 py-2 rounded border border-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)] hover:shadow-[0_0_15px_rgba(212,175,55,0.5)] transition-all duration-300"
@@ -212,7 +233,7 @@ export default function DetailedPriceTable() {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="col-span-1 space-y-6">
-            <div className="bg-[#5A1216] border border-[#D4AF37]/30  overflow-hidden ">
+            <div className="bg-[#5A1216] border border-[#D4AF37]/30 overflow-hidden">
               <div className="bg-[#3A0A0E] px-4 py-2 text-sm font-bold text-[#D4AF37] border-b border-[#D4AF37]/20">
                 新台幣匯率表
               </div>
@@ -240,7 +261,7 @@ export default function DetailedPriceTable() {
               </table>
             </div>
 
-            <div className="bg-[#5A1216] border border-[#D4AF37]/30  overflow-hidden ">
+            <div className="bg-[#5A1216] border border-[#D4AF37]/30 overflow-hidden">
               <div className="bg-[#3A0A0E] px-4 py-2 text-sm font-bold text-[#D4AF37] border-b border-[#D4AF37]/20">
                 國際金融指數
               </div>
@@ -270,7 +291,7 @@ export default function DetailedPriceTable() {
           </div>
 
           <div className="col-span-1 lg:col-span-3 space-y-6">
-            <div className="bg-gradient-to-br from-[#73171C] to-[#4A0E12] border border-[#D4AF37]/50  overflow-hidden shadow-2xl">
+            <div className="bg-gradient-to-br from-[#73171C] to-[#4A0E12] border border-[#D4AF37]/50 overflow-hidden shadow-2xl">
               <div className="bg-[#D4AF37]/10 px-4 py-3 text-sm font-bold text-[#D4AF37] border-b border-[#D4AF37]/30 flex justify-between items-center">
                 <span>唐宋珠寶 實體門市牌告價 (新台幣 / 台錢)</span>
                 <span className="text-xs font-normal text-[#E8DCC4]/60">
@@ -328,7 +349,7 @@ export default function DetailedPriceTable() {
                         {formatPrice(store14kBuy)}
                       </td>
                     </tr>
-                    <tr className="hover:bg-[#D4AF37]/10 transition-colors">
+                    <tr className="border-b border-[#D4AF37]/10 hover:bg-[#D4AF37]/10 transition-colors">
                       <td className="py-4 px-4 text-[#E4E4E4] font-bold text-base tracking-widest">
                         白金 Pt950
                       </td>
@@ -340,12 +361,24 @@ export default function DetailedPriceTable() {
                         {formatPrice(storePtBuy)}
                       </td>
                     </tr>
+                    <tr className="hover:bg-[#D4AF37]/10 transition-colors">
+                      <td className="py-4 px-4 text-[#A89F91] font-bold text-base tracking-widest">
+                        鈀金 Pd
+                      </td>
+                      <td className="py-4 px-4 text-[#E8DCC4]/70">台錢</td>
+                      <td className="py-4 px-4 text-xl font-bold text-[#FDF5E6]">
+                        {formatPrice(storePdSell)}
+                      </td>
+                      <td className="py-4 px-4 text-xl font-bold text-[#E8DCC4]/90">
+                        {formatPrice(storePdBuy)}
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
             </div>
 
-            <div className="bg-[#5A1216] border border-[#D4AF37]/30  overflow-hidden ">
+            <div className="bg-[#5A1216] border border-[#D4AF37]/30 overflow-hidden">
               <div className="bg-[#3A0A0E] px-4 py-2 text-sm font-bold text-[#D4AF37] border-b border-[#D4AF37]/20">
                 國際現貨金價及貴金屬即時行情 (新台幣 / 台錢)
               </div>
@@ -406,7 +439,7 @@ export default function DetailedPriceTable() {
                         {formatFinancial(rawPt - 20)}
                       </td>
                     </tr>
-                    <tr className="hover:bg-[#D4AF37]/10 transition-colors">
+                    <tr className="border-b border-[#D4AF37]/10 hover:bg-[#D4AF37]/10 transition-colors">
                       <td className="py-3 px-4 text-[#D1D5DB] font-medium tracking-wider">
                         白銀 Ag
                       </td>
@@ -424,6 +457,26 @@ export default function DetailedPriceTable() {
                       </td>
                       <td className="py-3 px-4 text-[#E8DCC4]/60 font-mono">
                         {formatFinancial(rawAg - 6)}
+                      </td>
+                    </tr>
+                    <tr className="hover:bg-[#D4AF37]/10 transition-colors">
+                      <td className="py-3 px-4 text-[#A89F91] font-medium tracking-wider">
+                        鈀金 Pd
+                      </td>
+                      <td className="py-3 px-4 text-[#4ADE80] font-bold font-mono">
+                        {formatFinancial(intlPdBuy)}
+                      </td>
+                      <td className="py-3 px-4 text-[#FF6B6B] font-bold font-mono">
+                        {formatFinancial(intlPdSell)}
+                      </td>
+                      <td className="py-3 px-4 text-[#FF6B6B] font-medium">
+                        -15.20 ▼
+                      </td>
+                      <td className="py-3 px-4 text-[#E8DCC4]/60 font-mono">
+                        {formatFinancial(rawPd + 80)}
+                      </td>
+                      <td className="py-3 px-4 text-[#E8DCC4]/60 font-mono">
+                        {formatFinancial(rawPd - 60)}
                       </td>
                     </tr>
                   </tbody>

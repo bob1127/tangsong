@@ -1,16 +1,13 @@
-// 檔案路徑：src/modules/checkout/components/addresses/index.tsx
 "use client"
 
 import { setAddresses } from "@lib/data/cart"
-import compareAddresses from "@lib/util/compare-addresses"
 import { CheckCircleSolid } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
-import { Heading, Text, useToggleState } from "@medusajs/ui"
+import { Heading, Text } from "@medusajs/ui"
 import Divider from "@modules/common/components/divider"
 import Spinner from "@modules/common/icons/spinner"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useActionState } from "react"
-import BillingAddress from "../billing_address"
 import ErrorMessage from "../error-message"
 import ShippingAddress from "../shipping-address"
 import { SubmitButton } from "../submit-button"
@@ -28,12 +25,6 @@ const Addresses = ({
 
   const isOpen = searchParams.get("step") === "address"
 
-  const { state: sameAsBilling, toggle: toggleSameAsBilling } = useToggleState(
-    cart?.shipping_address && cart?.billing_address
-      ? compareAddresses(cart?.shipping_address, cart?.billing_address)
-      : true
-  )
-
   const handleEdit = () => {
     router.push(pathname + "?step=address")
   }
@@ -47,10 +38,10 @@ const Addresses = ({
           level="h2"
           className="flex flex-row text-3xl-regular gap-x-2 items-baseline"
         >
-          收件地址
+          資訊
           {!isOpen && <CheckCircleSolid />}
         </Heading>
-        {/* ▼▼▼ 就是這裡，加上一個空標籤 <> 包住後面的元素 ▼▼▼ */}
+        {/* ▼▼▼ 加上一個空標籤 <> 包住後面的元素 ▼▼▼ */}
         {!isOpen && cart?.shipping_address && (
           <>
             <Text>
@@ -69,25 +60,9 @@ const Addresses = ({
       {isOpen ? (
         <form action={formAction}>
           <div className="pb-8">
-            <ShippingAddress
-              customer={customer}
-              checked={sameAsBilling}
-              onChange={toggleSameAsBilling}
-              cart={cart}
-            />
+            {/* 移除了 checked 與 onChange 屬性，因為不再需要切換帳單地址 */}
+            <ShippingAddress customer={customer} cart={cart} />
 
-            {!sameAsBilling && (
-              <div>
-                <Heading
-                  level="h2"
-                  className="text-3xl-regular gap-x-4 pb-6 pt-8"
-                >
-                  帳單地址
-                </Heading>
-
-                <BillingAddress cart={cart} customer={customer} />
-              </div>
-            )}
             <SubmitButton className="mt-6" data-testid="submit-address-button">
               繼續前往配送設定
             </SubmitButton>
@@ -97,11 +72,11 @@ const Addresses = ({
       ) : (
         <div>
           <div className="text-small-regular">
-            {cart && cart.shipping_address ? (
+            {/* {cart && cart.shipping_address ? (
               <div className="flex items-start gap-x-8">
                 <div className="flex items-start gap-x-1 w-full">
                   <div
-                    className="flex flex-col w-1/3"
+                    className="flex flex-col w-1/2"
                     data-testid="shipping-address-summary"
                   >
                     <Text className="txt-medium-plus text-ui-fg-base mb-1">
@@ -125,7 +100,7 @@ const Addresses = ({
                   </div>
 
                   <div
-                    className="flex flex-col w-1/3 "
+                    className="flex flex-col w-1/2"
                     data-testid="shipping-contact-summary"
                   >
                     <Text className="txt-medium-plus text-ui-fg-base mb-1">
@@ -138,46 +113,13 @@ const Addresses = ({
                       {cart.email}
                     </Text>
                   </div>
-
-                  <div
-                    className="flex flex-col w-1/3"
-                    data-testid="billing-address-summary"
-                  >
-                    <Text className="txt-medium-plus text-ui-fg-base mb-1">
-                      帳單地址
-                    </Text>
-
-                    {sameAsBilling ? (
-                      <Text className="txt-medium text-ui-fg-subtle">
-                        帳單地址與收件地址相同。
-                      </Text>
-                    ) : (
-                      <>
-                        <Text className="txt-medium text-ui-fg-subtle">
-                          {cart.billing_address?.last_name}{" "}
-                          {cart.billing_address?.first_name}
-                        </Text>
-                        <Text className="txt-medium text-ui-fg-subtle">
-                          {cart.billing_address?.address_1}{" "}
-                          {cart.billing_address?.address_2}
-                        </Text>
-                        <Text className="txt-medium text-ui-fg-subtle">
-                          {cart.billing_address?.postal_code}{" "}
-                          {cart.billing_address?.city}
-                        </Text>
-                        <Text className="txt-medium text-ui-fg-subtle">
-                          {cart.billing_address?.country_code?.toUpperCase()}
-                        </Text>
-                      </>
-                    )}
-                  </div>
                 </div>
               </div>
             ) : (
               <div>
                 <Spinner />
               </div>
-            )}
+            )} */}
           </div>
         </div>
       )}

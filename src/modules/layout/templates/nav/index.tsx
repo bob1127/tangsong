@@ -20,10 +20,10 @@ export default async function Nav() {
     retrieveCustomer().catch(() => null),
   ])
 
-  // 🚀 從 metadata 提取頭貼
+  // 🚀 從 metadata 提取 LINE 傳過來的大頭貼
   const avatarUrl = customer?.metadata?.avatar_url as string | undefined
 
-  // 🚀 格式化名稱顯示
+  // 🚀 格式化名稱顯示：有登入就秀名字，沒登入就秀「會員中心」
   let displayName = "會員中心"
   if (customer) {
     displayName =
@@ -65,12 +65,13 @@ export default async function Nav() {
           </div>
 
           <div className="flex items-center gap-x-6 h-full flex-1 basis-0 justify-end">
-            {/* 🚀 會員登入 / 頭貼區塊 */}
+            {/* 🚀 會員登入 / 頭貼與名稱顯示區塊 */}
             <div className="hidden small:flex items-center h-full">
               <LocalizedClientLink
                 className="text-[#5A1216] hover:text-[#D4AF37] tracking-widest font-medium transition-colors flex items-center gap-2"
                 href="/account"
               >
+                {/* 如果有登入，判斷要秀大頭貼還是預設人像圖標 */}
                 {customer ? (
                   avatarUrl ? (
                     <img
@@ -99,7 +100,7 @@ export default async function Nav() {
               </LocalizedClientLink>
             </div>
 
-            {/* 🚀 幫你加回來的連結區塊 */}
+            {/* 其他選單連結 */}
             <div className="hidden small:flex items-center h-full">
               <LocalizedClientLink
                 className="text-[#5A1216] hover:text-[#D4AF37] tracking-widest font-medium transition-colors"

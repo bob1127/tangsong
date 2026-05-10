@@ -8,7 +8,6 @@ import { Loader } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
 import { Button, clx, Heading, Text } from "@medusajs/ui"
 import ErrorMessage from "@modules/checkout/components/error-message"
-import Divider from "@modules/common/components/divider"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 
@@ -23,7 +22,6 @@ const Shipping: React.FC<ShippingProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingPrices, setIsLoadingPrices] = useState(true)
-
   const [calculatedPricesMap, setCalculatedPricesMap] = useState<
     Record<string, number>
   >({})
@@ -32,8 +30,8 @@ const Shipping: React.FC<ShippingProps> = ({
     cart.shipping_methods?.at(-1)?.shipping_option_id || null
   )
 
-  // 💡 預計來店日期的狀態
   const [visitDate, setVisitDate] = useState("")
+  const [visitTime, setVisitTime] = useState("")
 
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -41,12 +39,11 @@ const Shipping: React.FC<ShippingProps> = ({
 
   const isOpen = searchParams.get("step") === "delivery"
 
-  // 載入時讀取舊的日期紀錄
   useEffect(() => {
     const savedDate = sessionStorage.getItem("temp_visit_date")
-    if (savedDate) {
-      setVisitDate(savedDate)
-    }
+    const savedTime = sessionStorage.getItem("temp_visit_time")
+    if (savedDate) setVisitDate(savedDate)
+    if (savedTime) setVisitTime(savedTime)
   }, [])
 
   useEffect(() => {
@@ -78,9 +75,8 @@ const Shipping: React.FC<ShippingProps> = ({
   }
 
   const handleSubmit = () => {
-    // 💡 防呆檢查：只要有選物流，就一定要選日期
-    if (shippingMethodId && !visitDate) {
-      setError("請先選擇您的「預計來店日期」喔！")
+    if (shippingMethodId && (!visitDate || !visitTime)) {
+      setError("請完整選擇您的「預計來店日期與時段」喔！")
       return
     }
 
@@ -112,7 +108,6 @@ const Shipping: React.FC<ShippingProps> = ({
     setError(null)
   }, [isOpen])
 
-  // 取得今天的日期作為最小值限制
   const today = new Date().toISOString().split("T")[0]
 
   return (
@@ -133,11 +128,13 @@ const Shipping: React.FC<ShippingProps> = ({
             <span className="text-[#8B2500]">✓</span>
           )}
         </Heading>
-        {!isOpen && cart?.shipping_address && cart?.email && (
+
+        {/* 🚀 關鍵修正：放寬條件！只要沒有展開，且已有選擇配送方式，就顯示編輯按鈕 */}
+        {!isOpen && (cart.shipping_methods?.length ?? 0) > 0 && (
           <Text>
             <button
               onClick={handleEdit}
-              className="text-[#8B2500] hover:text-[#5c1800] font-serif tracking-widest text-sm"
+              className="text-[#8B2500] hover:text-[#5c1800] font-serif font-bold tracking-widest text-sm"
               data-testid="edit-delivery-button"
             >
               編輯
@@ -190,7 +187,6 @@ const Shipping: React.FC<ShippingProps> = ({
                         )}
                       >
                         <div className="flex items-center gap-x-4">
-                          {/* 💡 客製化：宋代風雅的單選圈圈 */}
                           <div
                             className={clx(
                               "w-4 h-4 rounded-full border flex items-center justify-center transition-colors",
@@ -232,7 +228,6 @@ const Shipping: React.FC<ShippingProps> = ({
                   })}
                 </RadioGroup>
 
-                {/* 💡 魔法區塊：只有UI改變，日期選擇邏輯完全保留 */}
                 {shippingMethodId && (
                   <div className="mt-6 p-6 bg-[#FFFDFC] border border-[#E8E2D9] animate-in fade-in zoom-in-95 duration-500">
                     <div className="flex items-center gap-2 mb-4 border-b border-[#E8E2D9] pb-2">
@@ -241,28 +236,78 @@ const Shipping: React.FC<ShippingProps> = ({
                         level="h3"
                         className="text-lg font-serif text-[#4A3B32] tracking-widest"
                       >
-                        預計來店日期
+                        預計來店時間
                       </Heading>
                     </div>
                     <Text className="text-sm text-[#7A6B5D] mb-5 font-serif">
-                      為提供最高品質的專屬服務，請選擇您方便前來的日期：
+                      為提供最高品質的專屬服務，請選擇您方便前來的日期與時段：
                     </Text>
 
-                    <div className="relative">
-                      <input
-                        type="date"
-                        value={visitDate}
-                        min={today}
-                        onChange={(e) => {
-                          setVisitDate(e.target.value)
-                          setError(null) // 選了日期就清除錯誤
-                          sessionStorage.setItem(
-                            "temp_visit_date",
-                            e.target.value
-                          )
-                        }}
-                        className="w-full p-3 bg-transparent text-[#4A3B32] border-b border-[#C2B8A3] focus:border-[#8B2500] focus:outline-none focus:ring-0 transition-colors cursor-pointer font-serif"
-                      />
+                    <div className="flex flex-col md:flex-row gap-6 relative">
+                      <div className="w-full relative">
+                        <label className="text-xs text-[#C2B8A3] font-serif absolute -top-4 left-0">
+                          日期
+                        </label>
+                        <input
+                          type="date"
+                          value={visitDate}
+                          min={today}
+                          onChange={(e) => {
+                            setVisitDate(e.target.value)
+                            setError(null)
+                            sessionStorage.setItem(
+                              "temp_visit_date",
+                              e.target.value
+                            )
+                          }}
+                          className="w-full p-3 bg-transparent text-[#4A3B32] border-b border-[#C2B8A3] focus:border-[#8B2500] focus:outline-none focus:ring-0 transition-colors cursor-pointer font-serif"
+                        />
+                      </div>
+                      <div className="w-full relative">
+                        <label className="text-xs text-[#C2B8A3] font-serif absolute -top-4 left-0">
+                          時段
+                        </label>
+                        <select
+                          value={visitTime}
+                          onChange={(e) => {
+                            setVisitTime(e.target.value)
+                            setError(null)
+                            sessionStorage.setItem(
+                              "temp_visit_time",
+                              e.target.value
+                            )
+                          }}
+                          className="w-full p-3 bg-transparent text-[#4A3B32] border-b border-[#C2B8A3] focus:border-[#8B2500] focus:outline-none focus:ring-0 transition-colors cursor-pointer font-serif appearance-none"
+                        >
+                          <option value="" disabled>
+                            請選擇來店時段
+                          </option>
+                          <option value="11:00 - 13:00">
+                            上午 11:00 - 13:00
+                          </option>
+                          <option value="13:00 - 15:00">
+                            下午 13:00 - 15:00
+                          </option>
+                          <option value="15:00 - 17:00">
+                            下午 15:00 - 17:00
+                          </option>
+                          <option value="17:00 - 19:00">
+                            傍晚 17:00 - 19:00
+                          </option>
+                          <option value="19:00 - 21:00">
+                            晚上 19:00 - 21:00
+                          </option>
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#8B2500] pt-1">
+                          <svg
+                            className="fill-current h-4 w-4"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                          </svg>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -295,10 +340,9 @@ const Shipping: React.FC<ShippingProps> = ({
                 <Text className="font-serif text-[#4A3B32] tracking-wider mb-2">
                   已選擇：{cart.shipping_methods!.at(-1)!.name}
                 </Text>
-                {/* 💡 關閉狀態時，顯示客人選好的日期 */}
-                {visitDate && (
+                {visitDate && visitTime && (
                   <Text className="font-serif text-[#8B2500] tracking-widest text-sm">
-                    預計來店：{visitDate.replace(/-/g, "/")}
+                    預計來店：{visitDate.replace(/-/g, "/")} ({visitTime})
                   </Text>
                 )}
               </div>

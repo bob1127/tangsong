@@ -15,7 +15,6 @@ interface HistoricalData {
   base_gold_twd_qian: number
   base_platinum_twd_qian: number
   base_silver_twd_qian: number
-  // 💡 新增後端傳來的歷史定價
   store_gold_sell?: number
   store_gold_buy?: number
   store_platinum_sell?: number
@@ -48,17 +47,24 @@ export default function HistoricalTrendChart() {
   const fetchHistory = async (showLoading = true) => {
     if (showLoading) setLoading(true)
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || ""
-      if (!backendUrl) return
+      // 🚀 核心修正：加入預設 localhost:9000，就算 env 沒寫也不會死掉
+      const backendUrl =
+        process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
+      const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
 
       const timestamp = new Date().getTime()
       const res = await fetch(
         `${backendUrl}/store/metals?days=${daysRange}&t=${timestamp}`,
         {
+          method: "GET",
           headers: {
-            "x-publishable-api-key": process.env
-              .NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string,
+            "Content-Type": "application/json",
+            "x-publishable-api-key": apiKey,
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+            Expires: "0",
           },
+          cache: "no-store",
         }
       )
 
@@ -109,7 +115,6 @@ export default function HistoricalTrendChart() {
         let sellPrice = 0
         let buyPrice = 0
 
-        // 💡 優先抓取 API 算好的價格，如果沒有則套用預設降級方案
         if (activeTab === "gold" && d.base_gold_twd_qian > 0) {
           sellPrice = d.store_gold_sell ?? d.base_gold_twd_qian + 800
           buyPrice = d.store_gold_buy ?? d.base_gold_twd_qian - 200

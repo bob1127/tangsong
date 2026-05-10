@@ -2,123 +2,59 @@
 
 import React, { useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-// 🚀 直接共用剛剛寫好的 Server Action，不用重寫！
+// 🚀 直接共用剛剛寫好的 Server Action，用來把 Token 存進 Cookie
 import { setLoginState } from "../google/actions"
 
 function LineCallbackHandler() {
   const searchParams = useSearchParams()
-  const [status, setStatus] = useState("正在同步您的 LINE 帳號...")
-
-  // 解析 JWT Token
-  const parseJwt = (token: string) => {
-    try {
-      const base64Url = token.split(".")[1]
-      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split("")
-          .map(function (c) {
-            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)
-          })
-          .join("")
-      )
-      return JSON.parse(jsonPayload)
-    } catch (e) {
-      return null
-    }
-  }
+  const [status, setStatus] = useState("正在驗證 LINE 授權...")
 
   useEffect(() => {
+    // 為了避免 React StrictMode 執行兩次，可以使用一個 flag (非必須但推薦)
+    let isMounted = true
+
     const verifyLogin = async () => {
       const code = searchParams.get("code")
-      const state = searchParams.get("state")
 
       if (!code) {
-        setStatus("驗證參數遺失，請重新登入。")
+        if (isMounted) setStatus("授權失敗或您取消了登入。")
         return
       }
 
       try {
-        const backendUrl =
-          process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
-        const pubKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
+        if (isMounted) setStatus("正在為您同步會員資料...")
 
-        // 🚀 注意這裡呼叫的是後端 LINE 的 callback API
-        const targetUrl = `${backendUrl}/auth/customer/line/callback?code=${code}&state=${state}`
-
-        const res = await fetch(targetUrl, {
-          method: "GET",
-          headers: { Accept: "application/json" },
-          credentials: "include",
+        // 🚀 關鍵改變：這裡直接打給我們「自己寫的 Next.js API」，把 code 交給它處理
+        const res = await fetch("/api/auth/line", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ code }),
         })
-        const text = await res.text()
 
-        if (res.ok) {
-          const data = JSON.parse(text)
-          if (data.token) {
-            const decoded = parseJwt(data.token) || {}
+        const data = await res.json()
 
-            // 🚀 LINE 的 Payload 結構解析
-            const userMeta = decoded.user_metadata || {}
-            const lineId = decoded.sub || userMeta.sub // LINE 給的唯一 ID
-            const fullName = userMeta.name || decoded.name || "LINE 會員"
-            const avatar = userMeta.picture || decoded.picture || ""
-
-            // ⚠️ 防呆：LINE 用戶不一定會授權 Email，沒授權就用 LINE ID 組合一個假信箱
-            const email =
-              userMeta.email ||
-              decoded.email ||
-              `line_${lineId}@tangsong.com.tw`
-
-            const headers = {
-              Authorization: `Bearer ${data.token}`,
-              "x-publishable-api-key": pubKey,
-              "Content-Type": "application/json",
-            }
-
-            // 檢查是否為老客戶
-            const meRes = await fetch(`${backendUrl}/store/customers/me`, {
-              headers,
-            })
-
-            if (meRes.ok) {
-              // 👑 老客戶登入
-              await setLoginState(data.token)
-              window.location.href = "/account"
-            } else {
-              // 🆕 新客戶註冊：背景建檔
-              setStatus("正在為您建立專屬會員檔案...")
-              const createRes = await fetch(`${backendUrl}/store/customers`, {
-                method: "POST",
-                headers,
-                body: JSON.stringify({
-                  email,
-                  first_name: fullName, // LINE 通常只給全名，我們直接塞在 first_name
-                  last_name: "", // last_name 留空
-                  metadata: {
-                    avatar_url: avatar,
-                    full_name: fullName,
-                    provider: "line",
-                  },
-                }),
-              })
-
-              if (createRes.ok) {
-                await setLoginState(data.token)
-                window.location.href = "/account"
-              } else {
-                setStatus("會員建檔失敗，請重新嘗試。")
-              }
-            }
-          }
+        if (res.ok && data.token) {
+          if (isMounted) setStatus("登入成功！正在進入會員中心...")
+          // 拿到 API 幫我們千辛萬苦生出來的 Medusa Token，存入 Cookie
+          await setLoginState(data.token)
+          // 大功告成，導回會員首頁！
+          window.location.href = "/account"
         } else {
-          setStatus("驗證失敗，請重試。")
+          if (isMounted)
+            setStatus(`登入失敗：${data.error || "未知錯誤，請聯繫客服"}`)
         }
       } catch (error: any) {
-        setStatus("連線異常，請稍後再試。")
+        if (isMounted) setStatus("網路連線異常，請稍後再試。")
       }
     }
+
     verifyLogin()
+
+    return () => {
+      isMounted = false
+    }
   }, [searchParams])
 
   return (
@@ -136,7 +72,14 @@ function LineCallbackHandler() {
 
 export default function LineCallbackPage() {
   return (
-    <Suspense fallback={<div className="w-screen h-screen bg-stone-50"></div>}>
+    // Suspense 的 fallback 也加上一樣的 UI，避免畫面閃爍
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-stone-200 border-t-[#06C755] rounded-full animate-spin mx-auto"></div>
+        </div>
+      }
+    >
       <LineCallbackHandler />
     </Suspense>
   )
