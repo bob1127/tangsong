@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 
-// 實例化 Resend，它會自動去抓 process.env.RESEND_API_KEY
-const resend = new Resend(process.env.RESEND_API_KEY)
+// 🚀 核心防呆機制：如果環境變數沒設定金鑰，就塞入假金鑰，確保 npm run build 絕對不會報錯！
+const resend = new Resend(process.env.RESEND_API_KEY || "re_dummy_key")
 
 export async function POST(request: Request) {
   try {
@@ -29,10 +29,17 @@ export async function POST(request: Request) {
         })
     )
 
-    // 3. 呼叫 Resend 發送 Email 給老闆
+    // 3. 檢查是否有真實金鑰再發信
+    if (!process.env.RESEND_API_KEY) {
+      console.log("⚠️ 尚未設定 RESEND_API_KEY，略過實際寄信動作。")
+      console.log(`收到來自 ${name} (${email}) 的表單：${subject}`)
+      return NextResponse.json({ success: true, message: "測試環境：表單已模擬送出" })
+    }
+
+    // 4. 呼叫 Resend 發送 Email 給老闆
     const { data, error } = await resend.emails.send({
       from: '唐宋珠寶官網表單 <onboarding@resend.dev>', // 測試階段請用 onboarding@resend.dev
-    to: ['tangsongzhubao@gmail.com'],
+      to: ['tangsongzhubao@gmail.com'],
       subject: `【官網新詢問】${subject} - 來自 ${name}`,
       html: `
         <h2>收到新的官網聯絡表單</h2>
