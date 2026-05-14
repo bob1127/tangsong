@@ -1,5 +1,8 @@
 import React from "react"
 
+// 🚀 終極快取解法：告訴 Next.js 這個頁面每 60 秒就要重新去後端抓一次最新資料
+export const revalidate = 60
+
 // 💡 更新介面：加入我們剛在資料庫新增的 thumbnail 欄位
 interface MedusaArticle {
   id: string
@@ -25,6 +28,7 @@ async function getArticles() {
       headers: {
         "x-publishable-api-key": publishableKey,
       },
+      // 🚀 fetch 層級的快取設定，確保這支 API 也遵守 60 秒更新規則
       next: { revalidate: 60 },
     })
 

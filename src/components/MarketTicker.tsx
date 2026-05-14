@@ -6,12 +6,21 @@ interface MetalsData {
   updated_at?: string
   fetch_timestamp?: string
   exchange_rate_usd_twd: number
+  // 國際現貨價 (基礎運算用)
   gold_price_qian?: number
   platinum_price_qian?: number
   silver_price_qian?: number
   base_gold_twd_qian?: number
   base_platinum_twd_qian?: number
   base_silver_twd_qian?: number
+
+  // 🚀 後台手動設定的門市牌告價 (與詳細表格同步)
+  gold_sell?: number
+  gold_buy?: number
+  pt950_sell?: number
+  pt950_buy?: number
+
+  // 原本程式碼的舊屬性名稱 (為了相容性保留)
   store_gold_sell?: number
   store_gold_buy?: number
   store_platinum_sell?: number
@@ -20,13 +29,14 @@ interface MetalsData {
   store_silver_buy?: number
 }
 
-const STORE_SPREAD = {
-  gold_sell_premium: 800,
-  gold_buy_discount: -200,
-  platinum_sell_premium: 1500,
-  platinum_buy_discount: -500,
-  silver_sell_premium: 40,
-  silver_buy_discount: -20,
+// 當後台沒有填寫時的備用加減碼 (與詳細表格邏輯一致)
+const DEFAULT_SPREAD = {
+  gold_sell: 800,
+  gold_buy: -200,
+  pt_sell: 1500,
+  pt_buy: -500,
+  ag_sell: 40,
+  ag_buy: -20,
 }
 
 export default function MarketTicker() {
@@ -43,12 +53,11 @@ export default function MarketTicker() {
     const fetchPrice = async () => {
       try {
         setError(false)
-        // 🚀 核心修正：加入預設 localhost:9000，確保永遠找得到後端
         const backendUrl =
           process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
         const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
 
-        // 🚀 加上時間戳防快取
+        // 防快取機制
         const targetUrl = `${backendUrl}/store/metals?nocache=${new Date().getTime()}`
 
         const res = await fetch(targetUrl, {
@@ -82,7 +91,7 @@ export default function MarketTicker() {
     }
 
     fetchPrice()
-    const interval = setInterval(fetchPrice, 180000)
+    const interval = setInterval(fetchPrice, 180000) // 3分鐘更新一次
     return () => clearInterval(interval)
   }, [])
 
@@ -98,34 +107,43 @@ export default function MarketTicker() {
     )
   }
 
+  // 1. 取得基礎現貨價 (用來當後台沒填資料時的備用計算基準)
   const rawGold = data?.base_gold_twd_qian ?? data?.gold_price_qian ?? 0
   const rawPt = data?.base_platinum_twd_qian ?? data?.platinum_price_qian ?? 0
   const rawAg = data?.base_silver_twd_qian ?? data?.silver_price_qian ?? 0
   const rate = data?.exchange_rate_usd_twd ?? 32.0
 
+  // 🚀 2. 核心邏輯：優先讀取後台填寫的欄位 (`gold_sell`, `gold_buy` 等)
+  // 如果後台沒填 (0 或 undefined)，才用國際金價 + 預設點差計算
   const goldSell =
+    data?.gold_sell ??
     data?.store_gold_sell ??
-    (rawGold > 0 ? rawGold + STORE_SPREAD.gold_sell_premium : 0)
+    (rawGold > 0 ? rawGold + DEFAULT_SPREAD.gold_sell : 0)
   const goldBuy =
+    data?.gold_buy ??
     data?.store_gold_buy ??
-    (rawGold > 0 ? rawGold + STORE_SPREAD.gold_buy_discount : 0)
-  const ptSell =
-    data?.store_platinum_sell ??
-    (rawPt > 0 ? rawPt + STORE_SPREAD.platinum_sell_premium : 0)
-  const ptBuy =
-    data?.store_platinum_buy ??
-    (rawPt > 0 ? rawPt + STORE_SPREAD.platinum_buy_discount : 0)
-  const agSell =
-    data?.store_silver_sell ??
-    (rawAg > 0 ? rawAg + STORE_SPREAD.silver_sell_premium : 0)
-  const agBuy =
-    data?.store_silver_buy ??
-    (rawAg > 0 ? rawAg + STORE_SPREAD.silver_buy_discount : 0)
+    (rawGold > 0 ? rawGold + DEFAULT_SPREAD.gold_buy : 0)
 
-  // 💡 如果是 0，這裡會顯示 ---
+  const ptSell =
+    data?.pt950_sell ??
+    data?.store_platinum_sell ??
+    (rawPt > 0 ? rawPt + DEFAULT_SPREAD.pt_sell : 0)
+  const ptBuy =
+    data?.pt950_buy ??
+    data?.store_platinum_buy ??
+    (rawPt > 0 ? rawPt + DEFAULT_SPREAD.pt_buy : 0)
+
+  // 白銀通常沒有專屬欄位，保留原本邏輯
+  const agSell =
+    data?.store_silver_sell ?? (rawAg > 0 ? rawAg + DEFAULT_SPREAD.ag_sell : 0)
+  const agBuy =
+    data?.store_silver_buy ?? (rawAg > 0 ? rawAg + DEFAULT_SPREAD.ag_buy : 0)
+
+  // 格式化價格：0 顯示為 "---"
   const formatPrice = (price: number) =>
     price > 0 ? price.toLocaleString() : "---"
 
+  // 試算功能 (已自動使用上述計算好的牌告價)
   const getCalcResult = () => {
     const val = parseFloat(inputValue)
     if (isNaN(val) || val <= 0 || goldBuy === 0 || goldSell === 0) return 0
@@ -349,7 +367,9 @@ export default function MarketTicker() {
           </div>
         )}
       </div>
-
+      <span className="text-xs font-normal text-[#E8DCC4]/60">
+        不強迫交易 ‧ 儀器精準檢測 ｜ 實際價格依門市內公布為準
+      </span>
       <button className="mt-1 w-full py-3 bg-[#D4AF37] hover:bg-[#B8942E] text-[#3A0A0E] font-bold text-sm tracking-[0.2em] transition-all rounded-xl shadow-[0_5px_15px_rgba(212,175,55,0.2)] hover:shadow-[0_5px_20px_rgba(212,175,55,0.4)] active:scale-95">
         聯絡我們 / 預約鑑價
       </button>

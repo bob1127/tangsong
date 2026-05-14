@@ -295,7 +295,7 @@ export default function DetailedPriceTable() {
               <div className="bg-[#D4AF37]/10 px-4 py-3 text-sm font-bold text-[#D4AF37] border-b border-[#D4AF37]/30 flex justify-between items-center">
                 <span>唐宋珠寶 實體門市牌告價 (新台幣 / 台錢)</span>
                 <span className="text-xs font-normal text-[#E8DCC4]/60">
-                  不強迫交易 ‧ 儀器精準檢測
+                  不強迫交易 ‧ 儀器精準檢測 ｜ 實際價格依門市內公布為準
                 </span>
               </div>
               <div className="overflow-x-auto">

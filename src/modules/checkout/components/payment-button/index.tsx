@@ -2,12 +2,12 @@
 
 import { HttpTypes } from "@medusajs/types"
 import { Button, Heading, Text, clx } from "@medusajs/ui"
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import ErrorMessage from "../error-message"
-import { XMark } from "@medusajs/icons"
+import { placeOrder, initiatePaymentSession } from "@lib/data/cart"
 
 type PaymentButtonProps = {
-  cart: HttpTypes.StoreCart
+  cart: any
   "data-testid": string
 }
 
@@ -17,15 +17,6 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
 }) => {
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [showModal, setShowModal] = useState(false)
-  const [orderMessage, setOrderMessage] = useState("")
-  const [isMobile, setIsMobile] = useState(true)
-
-  useEffect(() => {
-    const userAgent =
-      navigator.userAgent || navigator.vendor || (window as any).opera
-    setIsMobile(/android|ipad|iphone|ipod/i.test(userAgent.toLowerCase()))
-  }, [])
 
   const handleLineCheckout = async () => {
     if (submitting) return
@@ -43,63 +34,69 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     setSubmitting(true)
     setErrorMessage(null)
 
-    try {
-      const visitDateTime = `${savedDate} ${savedTime}`
+    // ==========================================
+    // 1. 準備 Payload 與背景通知
+    // ==========================================
+    const visitDateTime = `${savedDate} ${savedTime}`
+    const payload = {
+      cartId: cart.id,
+      cartItems: cart.items,
+      email: cart.email || "未提供",
+      firstName: cart.shipping_address?.first_name,
+      lastName: cart.shipping_address?.last_name,
+      phone: cart.shipping_address?.phone,
+      visitDate: visitDateTime,
+    }
 
-      const payload = {
-        cartId: cart.id,
-        cartItems: cart.items,
-        email: cart.email || "未提供",
-        firstName: cart.shipping_address?.first_name,
-        lastName: cart.shipping_address?.last_name,
-        phone: cart.shipping_address?.phone,
-        visitDate: visitDateTime,
+    const backendUrl =
+      process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
+    const publishableKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
+
+    fetch(`${backendUrl}/store/line-checkout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-publishable-api-key": publishableKey,
+      },
+      body: JSON.stringify(payload),
+    }).catch(() => {})
+
+    // ==========================================
+    // 2. 綁定付款模組 (如果失敗不影響後續流程)
+    // ==========================================
+    try {
+      await initiatePaymentSession(cart, {
+        provider_id: "pp_system_default",
+      })
+    } catch (sessionErr) {
+      console.log("付款綁定忽略:", sessionErr)
+    }
+
+    // ==========================================
+    // 3. 建立訂單與跳轉 (獨立區塊，避免被外層 catch 吃掉跳轉動作)
+    // ==========================================
+    try {
+      // 呼叫 placeOrder，成功的話內部會自動執行 redirect
+      // 如果 redirect 發生，下面的 setSubmitting(false) 就不會執行
+      await placeOrder()
+
+      // 注意：Next.js 的 redirect 是透過拋出一個特殊的 Error 來實現的！
+      // 如果外層沒有正確放行，跳轉就會失敗！
+    } catch (error: any) {
+      // Next.js 的跳轉機制會丟出一個名字叫 NEXT_REDIRECT 的錯誤
+      // 如果是這個錯誤，我們必須放行讓它跳轉！
+      if (error.message && error.message === "NEXT_REDIRECT") {
+        throw error // 放行跳轉
       }
 
-      const backendUrl =
-        process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
-      const publishableKey =
-        process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
-
-      // 呼叫後端發送 Email 與老闆的 LINE 通知
-      await fetch(`${backendUrl}/store/line-checkout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-publishable-api-key": publishableKey,
-        },
-        body: JSON.stringify(payload),
-      }).catch((err) => console.log("後端連線忽略:", err))
-
-      // 🚀 每次都即時產生最新的訊息，不再被舊暫存卡住！
-      const shortCartId =
-        cart.id?.split("_")[1]?.slice(0, 6).toUpperCase() || "NEW"
-      const msg = `您好，我想預約唐宋珠寶專屬鑑賞！\n預約單號：#RSV-${shortCartId}\n時間：${visitDateTime}\n----------------------\n${cart.items
-        ?.map((i: any) => `- ${i.title} x ${i.quantity}`)
-        .join("\n")}\n----------------------\n聯絡電話：${
-        cart.shipping_address?.phone
-      }\n期待您的安排。`
-
-      setOrderMessage(msg)
-
-      isMobile ? triggerLineRedirect(msg) : setShowModal(true)
-      setSubmitting(false)
-    } catch (error: any) {
-      setErrorMessage(error.message)
+      // 如果是真的結帳失敗，我們才印出錯誤並解除轉圈圈
+      console.error("建立訂單失敗:", error)
+      setErrorMessage(
+        "您的預約訂單可能已經建立，但系統跳轉發生異常，請至「會員中心」查看訂單紀錄。"
+      )
       setSubmitting(false)
     }
   }
-
-  const triggerLineRedirect = (msg?: string) => {
-    const finalMsg = msg || orderMessage
-    window.location.href = `https://line.me/R/oaMessage/@496zhpoz/?${encodeURIComponent(
-      finalMsg
-    )}`
-  }
-
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&color=8B2500&data=${encodeURIComponent(
-    `https://line.me/R/oaMessage/@496zhpoz/?${encodeURIComponent(orderMessage)}`
-  )}`
 
   return (
     <>
@@ -113,47 +110,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
       >
         確認預約鑑賞
       </Button>
-
       <ErrorMessage error={errorMessage} />
-
-      {showModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#2B221B]/80 p-4 backdrop-blur-sm transition-opacity"
-          onClick={() => setShowModal(false)}
-        >
-          <div
-            className="bg-[#FAF8F5] shadow-2xl w-full max-w-sm relative border border-[#E8E2D9]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="h-1 w-full bg-[#8B2500]"></div>
-            <button
-              onClick={() => setShowModal(false)}
-              className="absolute top-4 right-4 text-[#C2B8A3] hover:text-[#8B2500] transition-colors"
-            >
-              <XMark className="w-5 h-5" />
-            </button>
-            <div className="p-10 flex flex-col items-center">
-              <Heading
-                level="h2"
-                className="text-xl font-serif text-[#8B2500] mb-4 tracking-widest border-b border-[#E8E2D9] pb-4 w-full text-center"
-              >
-                唐宋專屬服務
-              </Heading>
-              <Text className="text-sm text-[#7A6B5D] mb-8 text-center font-serif leading-relaxed tracking-wider">
-                預約明細已為您準備妥當。
-                <br />
-                請掃描下方條碼，系統將為您接通專屬顧問。
-              </Text>
-              <div className="p-4 border border-[#8B2500] bg-[#FFFDFC]">
-                <img src={qrCodeUrl} alt="專屬條碼" className="w-40 h-40" />
-              </div>
-              <Text className="mt-6 text-xs text-[#8B2500] font-serif tracking-widest">
-                掃描後點擊傳送即可
-              </Text>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   )
 }

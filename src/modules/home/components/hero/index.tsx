@@ -10,7 +10,7 @@ const Hero = () => {
   return (
     <div className="w-full border-b border-ui-border-base relative bg-ui-bg-subtle">
       <Carousel />
-      <MarketTicker />
+      {/* <MarketTicker /> */}
 
       <DetailedPriceTable />
       <HistoricalTrendChart />
