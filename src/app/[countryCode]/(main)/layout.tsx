@@ -1,4 +1,5 @@
 import { Metadata } from "next"
+import TradeNoticePopup from "../../../components/TradeNoticePopup"
 
 import { listCartOptions, retrieveCart } from "@lib/data/cart"
 import { retrieveCustomer } from "@lib/data/customer"
@@ -30,6 +31,7 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
       {customer && cart && (
         <CartMismatchBanner customer={customer} cart={cart} />
       )}
+      <TradeNoticePopup />
       <Info />
       {cart && (
         <FreeShippingPriceNudge

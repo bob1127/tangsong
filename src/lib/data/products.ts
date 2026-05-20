@@ -68,7 +68,8 @@ export const listProducts = async ({
         },
         headers,
         next,
-        cache: "force-cache",
+        // 🚀 關鍵修改 1：把原本的 "force-cache" 改成 "no-store"，讓這支 API 永遠抓取最新資料
+        cache: "no-store",
       }
     )
     .then(({ products, count }) => {

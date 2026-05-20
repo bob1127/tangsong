@@ -113,10 +113,10 @@ export default function PrivacyPolicyPage() {
             <p>
               若您對隱私權政策有任何疑問，請聯繫客服：
               <a
-                href="mailto:service@tangsong.com.tw"
+                href="mailto:a0223069928@gmail.com"
                 className="text-[#D4AF37] hover:text-[#5A1216] transition-colors"
               >
-                service@tangsong.com.tw
+                a0223069928@gmail.com
               </a>
             </p>
             <p>最後更新日期：{lastUpdated}</p>

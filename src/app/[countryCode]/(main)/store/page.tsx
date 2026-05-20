@@ -1,7 +1,9 @@
 import { Metadata } from "next"
-
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import StoreTemplate from "@modules/store/templates"
+
+// 🚀 關鍵修改 2：加入這行，強制整個 Store 頁面使用動態渲染 (SSR)，確保每次造訪都能看到最新商品
+export const dynamic = "force-dynamic"
 
 // ==========================
 // 1. 商城頁面 SEO 設定 (強化版 Metadata)
@@ -20,7 +22,6 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        // 🚀 隨意抓取的高質感珠寶示意圖，避免社群分享時空白
         url: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=1200&auto=format&fit=crop",
         width: 1200,
         height: 630,
@@ -44,7 +45,6 @@ const collectionSchema = {
     "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=1200&auto=format&fit=crop",
 }
 
-// 建立一個基礎的分類清單，幫助 Google 爬蟲理解商城架構
 const itemListSchema = {
   "@context": "https://schema.org",
   "@type": "ItemList",

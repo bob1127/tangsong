@@ -123,7 +123,7 @@ export default function ContactForm() {
               />
             </svg>
             <span className="text-3xl md:text-4xl font-bold font-mono tracking-wider">
-              02-2306-9928
+              02-2306-9928 <br></br>0926-216-354
             </span>
           </div>
           <p className="text-xs tracking-widest text-[#5A1216]/60 leading-relaxed text-center md:text-left">
@@ -397,7 +397,7 @@ export default function ContactForm() {
               disabled={!isAgreed || isSubmitting}
               className={`w-full max-w-[320px] py-4 font-bold text-[15px] tracking-[0.3em] transition-all rounded-md duration-300 ${
                 isAgreed && !isSubmitting
-                  ? "bg-[#5A1216] text-white shadow-lg hover:bg-[#3A0A0E] cursor-pointer"
+                  ? "bg-[#5A1216] text-white shadow-lg hover:bg-[#b62f26] cursor-pointer"
                   : "bg-gray-100 text-gray-400 cursor-not-allowed"
               }`}
             >

@@ -151,7 +151,7 @@ const Register = ({ setCurrentView }: Props) => {
 
         {/* 送出按鈕 (加上唐宋品牌紅) */}
         <SubmitButton
-          className="w-full mt-6 bg-[#5A1216] hover:bg-[#3A0A0E] text-white"
+          className="w-full mt-6 bg-[#5A1216] hover:bg-[#b62f26] text-white"
           data-testid="register-button"
         >
           立即註冊

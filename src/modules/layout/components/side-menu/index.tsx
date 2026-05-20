@@ -11,11 +11,15 @@ import LanguageSelect from "../language-select"
 import { HttpTypes } from "@medusajs/types"
 import { Locale } from "@lib/data/locales"
 
-// 🇹🇼 1. 這裡改成全中文的選單名稱
+// 🇹🇼 1. 這裡改成與電腦版 Navbar 完全一致的項目
 const SideMenuItems = {
-  首頁: "/",
-  線上商店: "/store",
   會員中心: "/account",
+  關於我們: "/about", // 請依據你實際的路由修改 (例如 "/about-us")
+  收購流程: "/purchase-process",
+  商品資訊: "/store",
+  聯絡我們: "/contact",
+  收購項目: "/purchase-categories",
+  重量換算器: "/tools", // 請依據你實際的路由修改
   購物車: "/cart",
 }
 
@@ -36,12 +40,11 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
           {({ open, close }) => (
             <>
               <div className="relative flex h-full">
-                {/* 🇹🇼 2. 這裡把 Menu 改成 選單 */}
                 <Popover.Button
                   data-testid="nav-menu-button"
                   className="relative h-full flex items-center transition-all ease-out duration-200 focus:outline-none hover:text-ui-fg-base"
                 >
-                  門市選單 － MENU
+                  MENU
                 </Popover.Button>
               </div>
 
@@ -64,7 +67,6 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                 leaveTo="opacity-0"
               >
                 <PopoverPanel className="flex flex-col absolute w-full pr-4 sm:pr-0 sm:w-1/3 2xl:w-1/4 sm:min-w-min h-[calc(100vh-1rem)] z-[51] inset-x-0 text-sm text-ui-fg-on-color m-2 backdrop-blur-2xl">
-                  {/* 🎨 順手幫你把側邊欄背景微調，融入一點深燕脂紅的感覺，而不是原本死板的灰黑色 */}
                   <div
                     data-testid="nav-menu-popup"
                     className="flex flex-col h-full bg-[#1A0506]/80 rounded-rounded justify-between p-6"
@@ -74,15 +76,16 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                         <XMark />
                       </button>
                     </div>
-                    <ul className="flex flex-col gap-6 items-start justify-start">
+                    {/* 調整了 gap 讓選項稍微緊湊一點 */}
+                    <ul className="flex flex-col gap-5 items-start justify-start">
                       {Object.entries(SideMenuItems).map(([name, href]) => {
                         return (
                           <li key={name}>
                             <LocalizedClientLink
                               href={href}
-                              className="text-3xl leading-10 hover:text-[#D4AF37] transition-colors"
+                              // 🎨 2. 這裡將 text-3xl 改為 text-xl，並加入 font-serif 增加精品網頁的質感
+                              className="text-xl font-serif leading-8 hover:text-[#D4AF37] transition-colors"
                               onClick={close}
-                              // 如果有 E2E 測試報錯，可以把 data-testid 拿掉或保留原本的英文 mapping
                               data-testid={`${name}-link`}
                             >
                               {name}
@@ -129,7 +132,6 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                           )}
                         />
                       </div>
-                      {/* 🇹🇼 3. 將版權宣告的 Medusa Store 改為 唐宋珠寶 */}
                       <Text className="flex justify-between txt-compact-small text-white/50">
                         © {new Date().getFullYear()} 唐宋珠寶. All rights
                         reserved.

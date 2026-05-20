@@ -6,8 +6,9 @@ export default function TradeNoticePopup() {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
-    // 檢查瀏覽器 LocalStorage 是否已經有同意的紀錄
-    const hasAccepted = localStorage.getItem("tangsong_trade_notice_accepted")
+    // 🔴 關鍵修改：改用 sessionStorage
+    // 這樣重新整理頁面不會再跳出，但關閉分頁或瀏覽器後重開就會重新跳出
+    const hasAccepted = sessionStorage.getItem("tangsong_trade_notice_accepted")
 
     if (!hasAccepted) {
       // 為了讓進站體驗更好，延遲 1.5 秒後再優雅滑入
@@ -20,8 +21,8 @@ export default function TradeNoticePopup() {
 
   const handleClose = () => {
     setIsVisible(false)
-    // 將同意紀錄存入瀏覽器，下次進站就不會再彈出
-    localStorage.setItem("tangsong_trade_notice_accepted", "true")
+    // 🔴 關鍵修改：將同意紀錄存入 sessionStorage
+    sessionStorage.setItem("tangsong_trade_notice_accepted", "true")
   }
 
   // 如果不可見，就完全不渲染

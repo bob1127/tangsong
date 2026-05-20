@@ -1,7 +1,6 @@
 import { Metadata } from "next"
 import Hero from "@modules/home/components/hero"
 import { getRegion } from "@lib/data/regions"
-import TradeNoticePopup from "../../../components/TradeNoticePopup"
 
 // ==========================
 // 1. 首頁 SEO 設定 (強化版 Metadata)
@@ -44,7 +43,7 @@ const storeSchema = {
   "@id": "https://www.tangsong.com.tw/#store",
   url: "https://www.tangsong.com.tw",
   telephone: "02-2306-9928",
-  email: "service@tangsong.com.tw",
+  email: "a0223069928@gmail.com",
   priceRange: "$$$",
   address: {
     "@type": "PostalAddress",
@@ -198,7 +197,6 @@ export default async function Home(props: {
       />
 
       <Hero />
-      <TradeNoticePopup />
     </>
   )
 }

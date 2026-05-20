@@ -208,7 +208,7 @@ function GoogleCallbackHandler() {
             <div className="mt-6 flex justify-center">
               <button
                 onClick={() => router.push("/account")}
-                className="px-6 py-2 bg-[#5A1216] text-white rounded text-sm hover:bg-[#3A0A0E] transition-colors"
+                className="px-6 py-2 bg-[#5A1216] text-white rounded text-sm hover:bg-[#b62f26] transition-colors"
               >
                 返回登入頁
               </button>

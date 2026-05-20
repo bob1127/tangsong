@@ -152,7 +152,7 @@ const Login = ({ setCurrentView }: Props) => {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full mt-2 flex items-center justify-center bg-[#5A1216] hover:bg-[#3A0A0E] text-white py-3.5 rounded-lg shadow-sm hover:shadow transition-all font-bold tracking-widest text-[14px] disabled:opacity-50"
+          className="w-full mt-2 flex items-center justify-center bg-[#5A1216] hover:bg-[#b62f26] text-white py-3.5 rounded-lg shadow-sm hover:shadow transition-all font-bold tracking-widest text-[14px] disabled:opacity-50"
         >
           {isLoading ? (
             <span className="animate-pulse">驗證中...</span>

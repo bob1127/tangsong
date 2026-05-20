@@ -1,7 +1,7 @@
 "use client"
 
 import { HttpTypes } from "@medusajs/types"
-import { Button, Heading, Text, clx } from "@medusajs/ui"
+import { Button } from "@medusajs/ui"
 import React, { useState } from "react"
 import ErrorMessage from "../error-message"
 import { placeOrder, initiatePaymentSession } from "@lib/data/cart"
@@ -17,6 +17,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
 }) => {
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [debugInfo, setDebugInfo] = useState<string | null>(null)
 
   const handleLineCheckout = async () => {
     if (submitting) return
@@ -33,67 +34,80 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
 
     setSubmitting(true)
     setErrorMessage(null)
+    setDebugInfo(null)
+
+    console.log("🛒 [Debug 1] 開始結帳流程, 目前購物車狀態:", cart.id)
 
     // ==========================================
-    // 1. 準備 Payload 與背景通知
+    // 🔪 已經將 LINE 通知 API 拔除！
+    // 為了確認是不是它導致死鎖，我們暫時不要在結帳前呼叫任何自訂 API。
     // ==========================================
-    const visitDateTime = `${savedDate} ${savedTime}`
-    const payload = {
-      cartId: cart.id,
-      cartItems: cart.items,
-      email: cart.email || "未提供",
-      firstName: cart.shipping_address?.first_name,
-      lastName: cart.shipping_address?.last_name,
-      phone: cart.shipping_address?.phone,
-      visitDate: visitDateTime,
-    }
-
-    const backendUrl =
-      process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
-    const publishableKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
-
-    fetch(`${backendUrl}/store/line-checkout`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-publishable-api-key": publishableKey,
-      },
-      body: JSON.stringify(payload),
-    }).catch(() => {})
 
     // ==========================================
-    // 2. 綁定付款模組 (如果失敗不影響後續流程)
+    // 2. 綁定付款與建立訂單
     // ==========================================
-    try {
-      await initiatePaymentSession(cart, {
-        provider_id: "pp_system_default",
-      })
-    } catch (sessionErr) {
-      console.log("付款綁定忽略:", sessionErr)
-    }
+    const executeCheckout = async (retries = 3, delay = 1000) => {
+      try {
+        console.log(
+          `💳 [Debug 2] 嘗試綁定付款模組 (剩餘重試次數: ${retries})...`
+        )
 
-    // ==========================================
-    // 3. 建立訂單與跳轉 (獨立區塊，避免被外層 catch 吃掉跳轉動作)
-    // ==========================================
-    try {
-      // 呼叫 placeOrder，成功的話內部會自動執行 redirect
-      // 如果 redirect 發生，下面的 setSubmitting(false) 就不會執行
-      await placeOrder()
+        try {
+          await initiatePaymentSession(cart, {
+            provider_id: "pp_system_default",
+          })
+          console.log("✅ [Debug 3] 付款模組綁定成功")
+        } catch (sessionErr: any) {
+          throw new Error(`付款綁定失敗: ${sessionErr?.message || sessionErr}`)
+        }
 
-      // 注意：Next.js 的 redirect 是透過拋出一個特殊的 Error 來實現的！
-      // 如果外層沒有正確放行，跳轉就會失敗！
-    } catch (error: any) {
-      // Next.js 的跳轉機制會丟出一個名字叫 NEXT_REDIRECT 的錯誤
-      // 如果是這個錯誤，我們必須放行讓它跳轉！
-      if (error.message && error.message === "NEXT_REDIRECT") {
-        throw error // 放行跳轉
+        console.log("⏳ [Debug 4] 等待 500ms 緩衝...")
+        await new Promise((resolve) => setTimeout(resolve, 500))
+
+        console.log("📦 [Debug 5] 準備呼叫 placeOrder()...")
+        await placeOrder()
+        console.log("✅ [Debug 6] placeOrder() 執行成功！準備跳轉...")
+      } catch (error: any) {
+        console.log("🚨 [Debug 7] 捕獲到錯誤:", error)
+
+        const isRedirect =
+          error?.name === "NEXT_REDIRECT" ||
+          error?.message?.includes("NEXT_REDIRECT") ||
+          error?.digest?.includes("NEXT_REDIRECT")
+
+        if (isRedirect) {
+          console.log("🔄 [Debug 8] 這是 NEXT_REDIRECT 跳轉，放行！")
+          throw error
+        }
+
+        const isConflict =
+          error?.message?.includes("request conflicted with another request") ||
+          error?.message?.includes("idempotency") ||
+          error?.message?.includes("lock")
+
+        if (isConflict && retries > 0) {
+          console.warn(`⚠️ [Debug] 遇到冪等性衝突，等待 ${delay}ms 後重試...`)
+          setDebugInfo((prev) => `${prev || ""}\n[遇到衝突]: 嘗試重試中...`)
+          await new Promise((resolve) => setTimeout(resolve, delay))
+          return executeCheckout(retries - 1, delay * 1.5)
+        }
+
+        console.error("❌ [Debug 9] 建立訂單發生真實錯誤:", error)
+        setDebugInfo(
+          (prev) =>
+            `${prev || ""}\n[建立訂單錯誤]: ${
+              error?.message || JSON.stringify(error)
+            }`
+        )
+        throw error
       }
+    }
 
-      // 如果是真的結帳失敗，我們才印出錯誤並解除轉圈圈
-      console.error("建立訂單失敗:", error)
-      setErrorMessage(
-        "您的預約訂單可能已經建立，但系統跳轉發生異常，請至「會員中心」查看訂單紀錄。"
-      )
+    try {
+      await executeCheckout()
+    } catch (error: any) {
+      console.error("❌ [Debug 10] 最終錯誤:", error)
+      setErrorMessage("結帳發生異常，請查看下方除錯資訊！")
       setSubmitting(false)
     }
   }
@@ -101,6 +115,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
   return (
     <>
       <Button
+        type="button"
         disabled={submitting}
         isLoading={submitting}
         onClick={handleLineCheckout}
@@ -110,7 +125,15 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
       >
         確認預約鑑賞
       </Button>
-      <ErrorMessage error={errorMessage} />
+
+      <ErrorMessage error={errorMessage} data-testid="payment-error-message" />
+
+      {debugInfo && (
+        <div className="mt-4 p-4 bg-stone-100 border-l-4 border-red-500 text-[#5A1216] text-xs font-mono whitespace-pre-wrap rounded-r-md text-left shadow-inner break-words">
+          <p className="font-bold mb-2">🛠️ 系統回傳的真實除錯資訊：</p>
+          {debugInfo}
+        </div>
+      )}
     </>
   )
 }

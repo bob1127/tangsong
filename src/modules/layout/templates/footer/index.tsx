@@ -18,7 +18,7 @@ export default function Footer() {
 
   const collections = [
     { id: "c1", title: "隱私條款", handle: "/privacy" },
-    { id: "c2", title: "關於收購/鑒價", handle: "/contact" },
+    { id: "c2", title: "關於收購/鑒價", handle: "/purchase-process" },
     {
       id: "c3",
       title: "門市",
@@ -45,7 +45,7 @@ export default function Footer() {
           </span>
           <h2 className="text-3xl md:text-5xl tracking-[0.2em] mb-8 font-serif"></h2>
           <div className="text-sm md:text-base text-gray-400 tracking-widest leading-loose max-w-xl">
-            <h3 className="text-2xl text-white">傳承一世福，情繫唐宋金</h3>
+            <h3 className="text-3xl">傳承一世福，情繫唐宋</h3>
             <br />
             把最好的留給最愛的，唐宋珠寶，幫您守住傳家寶。
             <br />
@@ -112,7 +112,7 @@ export default function Footer() {
               <div className="text-stone-300 mb-2 leading-relaxed">
                 唐宋珠寶銀樓買賣黃金、ｋ金、白金、珠寶鑽石、
                 <br />
-                提供貴金屬分析，翻造、舊台翻新、修改
+                提供貴金屬分析，損壞戒指、斷掉項鍊，所有當鋪銀樓不收，不清楚不明白的皆可儀器免費鑑定估價，絕不免強交易。
               </div>
 
               <a
@@ -123,10 +123,10 @@ export default function Footer() {
               </a>
 
               <a
-                href="mailto:service@tangsong.com.tw"
+                href="mailto:a0223069928@gmail.com"
                 className="hover:text-[#82111F] transition-colors flex items-center gap-2"
               >
-                Email: service@tangsong.com.tw
+                Email: a0223069928@gmail.com
               </a>
 
               <a
@@ -248,7 +248,8 @@ export default function Footer() {
                     </svg>
                   </a>
                   <a
-                    href="#"
+                    href="https://lin.ee/QiLRhma"
+                    target="_blank"
                     className="hover:text-[#82111F] transition-colors"
                   >
                     <svg
