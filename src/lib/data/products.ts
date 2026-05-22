@@ -51,6 +51,7 @@ export const listProducts = async ({
 
   const next = {
     ...(await getCacheOptions("products")),
+    revalidate: 60,
   }
 
   return sdk.client
@@ -68,8 +69,6 @@ export const listProducts = async ({
         },
         headers,
         next,
-        // 🚀 關鍵修改 1：把原本的 "force-cache" 改成 "no-store"，讓這支 API 永遠抓取最新資料
-        cache: "no-store",
       }
     )
     .then(({ products, count }) => {

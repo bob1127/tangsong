@@ -473,9 +473,9 @@ const Slider = () => {
         <h1 className="text-5xl md:text-7xl font-serif tracking-[0.2em] mb-4">
           唐宋珠寶
         </h1>
-        <p className="text-base md:text-xl font-light tracking-[0.15em] opacity-90">
-          黃金收購 ｜ 貴金屬珠寶收購 ｜ 高價收購
-        </p>
+        <h2 className="text-base md:text-xl font-normal tracking-[0.15em] opacity-90">
+          專業檢測與透明報價，安心回收每一份價值
+        </h2>
       </div>
     </div>
   )

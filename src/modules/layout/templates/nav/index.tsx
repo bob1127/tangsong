@@ -32,7 +32,7 @@ export default async function Nav() {
 
   return (
     <div className="sticky top-0 inset-x-0 z-50 group">
-      <div className="topNav w-full py-2 bg-[#b62f26] flex justify-center items-center border-b border-[#D4AF37]/30">
+      <div className="topNav w-full py-2 bg-[#3A0A0E] flex justify-center items-center border-b border-[#D4AF37]/30">
         <span className="text-xs tracking-[0.2em] text-[#D4AF37]">
           今日國際金價已更新，歡迎線上預約門市鑑賞
         </span>

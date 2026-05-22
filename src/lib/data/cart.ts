@@ -422,7 +422,10 @@ export async function placeOrder(cartId?: string) {
     redirect(`/${countryCode}/order/${cartRes?.order.id}/confirmed`)
   }
 
-  return cartRes.cart
+  // cart.complete() returned type="cart" — payment authorization failed
+  throw new Error(
+    "付款授權失敗，訂單未建立。請稍候再試，或聯絡客服人員協助。"
+  )
 }
 
 /**

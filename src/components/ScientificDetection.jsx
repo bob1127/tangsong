@@ -16,7 +16,7 @@ gsap.registerPlugin(ScrollTrigger)
 const content = {
   caseNumber: "STYLE 02",
   role: "URBAN ELEGANCE",
-  name: "都會奢華",
+  name: " ",
   description: " ",
   image: "/images/18e59f52-18b7-413b-a783-ff21e3c51ad3.png",
   blockTitle: "科學儀器精準檢測-純度價值透明呈現",
@@ -52,11 +52,14 @@ export default function ScientificDetection() {
   )
 
   return (
-    <section ref={containerRef} className="w-full   text-black font-sans">
+    <section
+      ref={containerRef}
+      className="w-full  bg-white   text-black font-sans"
+    >
       {/* 使用 lg:flex-row-reverse 保持與原先陣列中奇數項相同的左右交錯感
         (左圖右文，或是視覺上的左文右圖)
       */}
-      <div className="flex flex-col lg:flex-row-reverse w-full h-auto lg:h-[100svh]">
+      <div className="flex w-full h-auto justify-center pb-20 ">
         {/* ================= 資訊展示區 ================= */}
         <div className="w-full lg:w-[50%] h-full overflow-hidden flex flex-col items-center justify-center bg-white z-10 relative py-12 lg:py-0">
           <div className="text-center mb-8 max-w-lg px-4">
@@ -84,50 +87,6 @@ export default function ScientificDetection() {
                 unoptimized
               />
             </div>
-          </div>
-        </div>
-
-        {/* ================= 視覺背景區 ================= */}
-        <div className="w-full lg:w-1/2 h-[60vh] lg:h-full relative overflow-hidden group">
-          {/* 視差滾動圖片 */}
-          <div className="parallax-img-wrapper absolute top-[-10%] left-0 w-full h-[120%] will-change-transform">
-            <Image
-              src={content.image}
-              alt={content.name}
-              fill
-              className="object-cover transition-transform duration-[10s] ease-out"
-              unoptimized
-            />
-          </div>
-
-          {/* 漸層遮罩 */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent z-10 pointer-events-none"></div>
-
-          {/* 浮動文字與按鈕 */}
-          <div className="absolute bottom-12 w-full flex flex-col items-center text-center text-white z-20 px-6">
-            <span className="border border-white/40 rounded-full px-5 py-1.5 text-[10px] font-bold tracking-[0.15em] mb-4 backdrop-blur-md">
-              {content.caseNumber}
-            </span>
-            <span className="text-[11px] font-bold tracking-[0.2em] mb-2 opacity-80 uppercase">
-              {content.role}
-            </span>
-            <h2 className="text-3xl lg:text-[36px] font-bold tracking-widest mb-4">
-              {content.name}
-            </h2>
-            <div className="w-6 h-[1px] bg-white/50 mb-6"></div>
-
-            {content.description.trim() !== "" && (
-              <p className="text-[12px] tracking-widest mb-8 opacity-90">
-                {content.description}
-              </p>
-            )}
-
-            <Link
-              href={content.href}
-              className="bg-[#fd4e27] text-white border border-white text-[10px] font-bold tracking-[0.2em] uppercase px-12 py-4 hover:bg-white hover:text-black transition-colors duration-300"
-            >
-              {content.btnReadMore}
-            </Link>
           </div>
         </div>
       </div>

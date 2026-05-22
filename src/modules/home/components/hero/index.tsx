@@ -8,6 +8,7 @@ import News from "../../../../components/NewsSection"
 import ScientificDetection from "../../../../components/ScientificDetection"
 import HistoricalTrendChart from "../../../../components/HistoricalTrendChart" // 你的路徑
 import FeaturedProducts from "../../../../components/FeaturedProducts"
+import GoldFAQ from "../../../../components/GoldFAQ"
 const Hero = () => {
   return (
     <div className="w-full border-b border-ui-border-base relative bg-ui-bg-subtle">
@@ -15,10 +16,11 @@ const Hero = () => {
       {/* <MarketTicker /> */}
 
       <DetailedPriceTable />
-      <ScientificDetection />
-      <HistoricalTrendChart />
       <FeaturedProducts />
+      <ScientificDetection />
       <News />
+      <HistoricalTrendChart />
+      <GoldFAQ />
     </div>
   )
 }

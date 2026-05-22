@@ -93,7 +93,7 @@ export default function DetailedPriceTable() {
   if (loading) {
     return (
       <div className="w-full max-w-[1400px] mx-auto mt-12 px-4 lg:px-8 mb-20">
-        <div className="w-full h-64 bg-[#b62f26]/40 animate-pulse rounded-xl mt-8 border border-[#D4AF37]/20"></div>
+        <div className="w-full h-64 bg-[#3A0A0E]/40 animate-pulse rounded-xl mt-8 border border-[#D4AF37]/20"></div>
       </div>
     )
   }
@@ -187,7 +187,7 @@ export default function DetailedPriceTable() {
         {/* 頭部資訊區 */}
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-4 border-b border-[#D4AF37]/40 pb-3 gap-4 md:gap-0">
           <div>
-            <h2 className="text-2xl md:text-4xl font-serif text-[#b62f26] font-bold tracking-widest flex items-center gap-3">
+            <h2 className="text-2xl md:text-4xl font-serif text-[#3A0A0E] font-bold tracking-widest flex items-center gap-3">
               {error && (
                 <span className="flex h-3 w-3 relative">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -196,7 +196,7 @@ export default function DetailedPriceTable() {
               )}
               國際貴金屬與門市即時行情
             </h2>
-            <p className="text-[#b62f26]/70 font-bold text-sm tracking-wider mt-2">
+            <p className="text-[#3A0A0E]/70 font-bold text-sm tracking-wider mt-2">
               {error
                 ? "連線異常，顯示備用資料"
                 : `資料更新時間：${new Date(updateTime).toLocaleString(
@@ -206,7 +206,7 @@ export default function DetailedPriceTable() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3 self-end">
-            <span className="text-xs text-[#FDF5E6]/90 bg-[#b62f26] border border-[#D4AF37]/30 px-3 py-2 rounded-sm flex items-center shadow-sm">
+            <span className="text-xs text-[#FDF5E6]/90 bg-[#3A0A0E] border border-[#D4AF37]/30 px-3 py-2 rounded-sm flex items-center shadow-sm">
               美元匯率基準:{" "}
               <span className="text-[#F3E5AB] font-bold ml-1">
                 {rate.toFixed(2)}
@@ -238,8 +238,8 @@ export default function DetailedPriceTable() {
           {/* ================= 左側資訊欄 ================= */}
           <div className="col-span-1 space-y-6">
             {/* 匯率表 */}
-            <div className="bg-[#b62f26] border border-[#D4AF37]/30 overflow-hidden shadow-md rounded-sm">
-              <div className="bg-[#9c241c] px-4 py-3 text-sm font-bold text-[#F3E5AB] border-b border-[#D4AF37]/20 tracking-wider">
+            <div className="bg-[#3A0A0E] border border-[#D4AF37]/30 overflow-hidden shadow-md rounded-sm">
+              <div className="bg-[#3A0A0E] px-4 py-3 text-sm font-bold text-[#F3E5AB] border-b border-[#D4AF37]/20 tracking-wider">
                 新台幣匯率表
               </div>
               <table className="w-full text-sm text-left">
@@ -267,8 +267,8 @@ export default function DetailedPriceTable() {
             </div>
 
             {/* 指數表 */}
-            <div className="bg-[#b62f26] border border-[#D4AF37]/30 overflow-hidden shadow-md rounded-sm">
-              <div className="bg-[#9c241c] px-4 py-3 text-sm font-bold text-[#F3E5AB] border-b border-[#D4AF37]/20 tracking-wider">
+            <div className="bg-[#3A0A0E] border border-[#D4AF37]/30 overflow-hidden shadow-md rounded-sm">
+              <div className="bg-[#3A0A0E] px-4 py-3 text-sm font-bold text-[#F3E5AB] border-b border-[#D4AF37]/20 tracking-wider">
                 國際金融指數
               </div>
               <table className="w-full text-sm text-left">
@@ -299,7 +299,7 @@ export default function DetailedPriceTable() {
           {/* ================= 右側主表格欄 ================= */}
           <div className="col-span-1 lg:col-span-3 space-y-6">
             {/* 實體門市牌告價 */}
-            <div className="bg-gradient-to-br from-[#b62f26] to-[#801b15] border border-[#D4AF37]/40 overflow-hidden shadow-xl rounded-sm">
+            <div className="bg-gradient-to-br from-[#3A0A0E] to-[#801b15] border border-[#D4AF37]/40 overflow-hidden shadow-xl rounded-sm">
               <div className="bg-black/15 px-4 py-3.5 text-sm font-bold text-[#F3E5AB] border-b border-[#D4AF37]/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <span className="tracking-widest font-serif text-base">
                   唐宋珠寶 實體門市牌告價 (新台幣 / 台錢)
@@ -310,7 +310,7 @@ export default function DetailedPriceTable() {
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-center">
-                  <thead className="bg-[#9c241c]/50 text-[#F3E5AB] text-xs tracking-wider">
+                  <thead className="bg-[#3A0A0E]/50 text-[#F3E5AB] text-xs tracking-wider">
                     <tr>
                       <th className="py-3 px-4 font-bold w-1/4">商品項目</th>
                       <th className="py-3 px-4 font-normal w-1/4">單位</th>
@@ -323,24 +323,24 @@ export default function DetailedPriceTable() {
                     </tr>
                   </thead>
                   <tbody>
-                    {/* 1. 黃金飾金 (無賣出價，改為一槓) */}
+                    {/* 1. 黃金賣出牌價 (僅賣出價) */}
                     <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors">
-                      <td className="py-4 px-4 text-[#F3E5AB] font-bold text-base tracking-widest">
-                        黃金飾金
+                      <td className="py-4 px-4 text-[#FDF5E6] font-bold text-base tracking-widest">
+                        黃金賣出牌價
                       </td>
                       <td className="py-4 px-4 text-[#FDF5E6]/80">台錢</td>
+                      <td className="py-4 px-4 text-xl font-bold text-[#FDF5E6] drop-shadow-md">
+                        {formatPrice(storeGoldSell)}
+                      </td>
                       <td className="py-4 px-4 text-xl font-medium text-[#FDF5E6]/30">
                         —
                       </td>
-                      <td className="py-4 px-4 text-xl font-bold text-[#F3E5AB]">
-                        {formatPrice(storeGoldBuy)}
-                      </td>
                     </tr>
 
-                    {/* 2. 黃金條塊 */}
+                    {/* 2. 黃金條塊回收價 */}
                     <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors bg-black/10">
                       <td className="py-4 px-4 text-[#F3E5AB]/90 font-bold text-base tracking-widest">
-                        黃金條塊
+                        黃金條塊回收價
                       </td>
                       <td className="py-4 px-4 text-[#FDF5E6]/80">台錢</td>
                       <td className="py-4 px-4 text-xl font-medium text-[#FDF5E6]/30">
@@ -351,24 +351,24 @@ export default function DetailedPriceTable() {
                       </td>
                     </tr>
 
-                    {/* 3. 白銀 */}
+                    {/* 3. 黃金飾金回收價 */}
                     <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors">
-                      <td className="py-4 px-4 text-[#D1D5DB] font-bold text-base tracking-widest">
-                        白銀
+                      <td className="py-4 px-4 text-[#F3E5AB] font-bold text-base tracking-widest">
+                        黃金飾金回收價
                       </td>
                       <td className="py-4 px-4 text-[#FDF5E6]/80">台錢</td>
                       <td className="py-4 px-4 text-xl font-medium text-[#FDF5E6]/30">
                         —
                       </td>
-                      <td className="py-4 px-4 text-xl font-bold text-[#C1B6A4]">
-                        {formatPrice(storeSilverBuy)}
+                      <td className="py-4 px-4 text-xl font-bold text-[#F3E5AB]">
+                        {formatPrice(storeGoldBuy)}
                       </td>
                     </tr>
 
-                    {/* 4. 18K 金 */}
+                    {/* 4. 18K 金回收價 */}
                     <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors bg-black/10">
                       <td className="py-3 px-4 text-[#F3E5AB]/90 font-bold text-base tracking-widest">
-                        18K 金
+                        18K 金回收價
                       </td>
                       <td className="py-3 px-4 text-[#FDF5E6]/70">台錢</td>
                       <td className="py-3 px-4 text-lg font-medium text-[#FDF5E6]/30">
@@ -379,10 +379,10 @@ export default function DetailedPriceTable() {
                       </td>
                     </tr>
 
-                    {/* 5. 14K 金 */}
+                    {/* 5. 14K 金回收價 */}
                     <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors">
                       <td className="py-3 px-4 text-[#F3E5AB]/90 font-bold text-base tracking-widest">
-                        14K 金
+                        14K 金回收價
                       </td>
                       <td className="py-3 px-4 text-[#FDF5E6]/70">台錢</td>
                       <td className="py-3 px-4 text-lg font-medium text-[#FDF5E6]/30">
@@ -393,10 +393,24 @@ export default function DetailedPriceTable() {
                       </td>
                     </tr>
 
-                    {/* 6. 白金 Pt950 (無賣出價，改為一槓) */}
+                    {/* 6. 白銀回收價 */}
                     <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors bg-black/10">
+                      <td className="py-4 px-4 text-[#D1D5DB] font-bold text-base tracking-widest">
+                        白銀回收價
+                      </td>
+                      <td className="py-4 px-4 text-[#FDF5E6]/80">台錢</td>
+                      <td className="py-4 px-4 text-xl font-medium text-[#FDF5E6]/30">
+                        —
+                      </td>
+                      <td className="py-4 px-4 text-xl font-bold text-[#C1B6A4]">
+                        {formatPrice(storeSilverBuy)}
+                      </td>
+                    </tr>
+
+                    {/* 7. 白金 Pt950 回收價 */}
+                    <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors">
                       <td className="py-4 px-4 text-[#E4E4E4] font-bold text-base tracking-widest">
-                        白金 Pt950
+                        白金 Pt950 回收價
                       </td>
                       <td className="py-4 px-4 text-[#FDF5E6]/80">台錢</td>
                       <td className="py-4 px-4 text-xl font-medium text-[#FDF5E6]/30">
@@ -407,10 +421,10 @@ export default function DetailedPriceTable() {
                       </td>
                     </tr>
 
-                    {/* 7. 鈀金 Pd (無賣出價，改為一槓) */}
-                    <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors">
+                    {/* 8. 鈀金 Pd 回收價 */}
+                    <tr className="hover:bg-black/20 transition-colors bg-black/10">
                       <td className="py-4 px-4 text-[#C1B6A4] font-bold text-base tracking-widest">
-                        鈀金 Pd
+                        鈀金 Pd 回收價
                       </td>
                       <td className="py-4 px-4 text-[#FDF5E6]/80">台錢</td>
                       <td className="py-4 px-4 text-xl font-medium text-[#FDF5E6]/30">
@@ -420,28 +434,14 @@ export default function DetailedPriceTable() {
                         {formatPrice(storePdBuy)}
                       </td>
                     </tr>
-
-                    {/* 8. 黃金 (最後一行，唯一有賣出價，無回收價) */}
-                    <tr className="hover:bg-black/20 transition-colors bg-black/10">
-                      <td className="py-4 px-4 text-[#FDF5E6] font-bold text-base tracking-widest">
-                        黃金
-                      </td>
-                      <td className="py-4 px-4 text-[#FDF5E6]/80">台錢</td>
-                      <td className="py-4 px-4 text-xl font-bold text-[#FDF5E6] drop-shadow-md">
-                        {formatPrice(storeGoldSell)}
-                      </td>
-                      <td className="py-4 px-4 text-xl font-medium text-[#FDF5E6]/30">
-                        —
-                      </td>
-                    </tr>
                   </tbody>
                 </table>
               </div>
             </div>
 
             {/* 國際現貨行情表 */}
-            <div className="bg-[#b62f26] border border-[#D4AF37]/30 overflow-hidden shadow-xl rounded-sm">
-              <div className="bg-[#9c241c] px-4 py-3.5 text-sm font-bold text-[#F3E5AB] border-b border-[#D4AF37]/20 tracking-wider">
+            <div className="bg-[#3A0A0E] border border-[#D4AF37]/30 overflow-hidden shadow-xl rounded-sm">
+              <div className="bg-[#3A0A0E]/10 px-4 py-3.5 text-sm font-bold text-[#F3E5AB] border-b border-[#D4AF37]/20 tracking-wider">
                 國際現貨金價及貴金屬即時行情 (新台幣 / 台錢)
               </div>
               <div className="overflow-x-auto">

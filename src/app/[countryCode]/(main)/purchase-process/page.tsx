@@ -1,251 +1,225 @@
-"use client"
+import { Metadata } from "next"
+import PurchaseProcessClient from "./PurchaseProcessClient"
 
-import React, { useRef } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import gsap from "gsap"
-import { ScrollTrigger } from "gsap/ScrollTrigger"
-import { useGSAP } from "@gsap/react"
+const BASE_URL = "https://www.tangsong.com.tw"
 
-gsap.registerPlugin(ScrollTrigger)
+// ==========================
+// ISR：60 秒重新驗證
+// ==========================
+export const revalidate = 60
 
-// ==========================================
-// TypeScript 型別定義
-// ==========================================
-interface PurchaseStep {
-  step: string
-  title: string
-  subtitle: string
-  desc: string
-  image: string
+// ==========================
+// 1. SEO Metadata
+// ==========================
+export const metadata: Metadata = {
+  title:
+    "黃金回收收購流程 | 五步驟透明估價、熔融檢測、當場現金 | 唐宋珠寶 台北萬華",
+  description:
+    "唐宋珠寶提供最透明的黃金回收收購流程：現場初步檢視→專業儀器鑑定→精確秤重報價→熔融成色檢測→當場現金交易。拒絕黑箱扣耗損，科學數據說話，台北萬華區高價黃金收購首選。",
+  keywords: [
+    "黃金回收流程",
+    "黃金收購流程",
+    "黃金回收怎麼估價",
+    "熔融檢測",
+    "黃金鑑定",
+    "黃金秤重",
+    "黃金回收透明",
+    "高價黃金收購",
+    "K金回收流程",
+    "鉑金回收流程",
+    "台北黃金回收",
+    "萬華黃金回收",
+    "唐宋珠寶",
+    "黃金現金交易",
+    "貴金屬回收流程",
+  ],
+  openGraph: {
+    title:
+      "黃金回收收購流程 | 五步驟透明估價、熔融檢測、當場現金 | 唐宋珠寶",
+    description:
+      "台北萬華唐宋珠寶，五步驟透明收購流程：初步檢視、儀器鑑定、秤重報價、熔融檢測、現金交易。拒絕扣耗損，科學數據，安心放心。",
+    url: `${BASE_URL}/purchase-process`,
+    siteName: "唐宋珠寶",
+    locale: "zh_TW",
+    type: "website",
+    images: [
+      {
+        url: "https://www.tangsong.com.tw/images/精準成色檢測.jpg",
+        width: 1200,
+        height: 630,
+        alt: "唐宋珠寶黃金熔融檢測與透明收購流程",
+      },
+    ],
+  },
+  alternates: {
+    canonical: `${BASE_URL}/tw/purchase-process`,
+  },
 }
 
-interface MeltingHighlight {
-  title: string
-  desc: string
-}
+// ==========================
+// 2. 結構化資料
+// ==========================
 
-// ==========================================
-// 靜態資料區塊
-// ==========================================
-const purchaseSteps: PurchaseStep[] = [
-  {
-    step: "01",
-    title: "現場初步檢視",
-    subtitle: "INITIAL INSPECTION",
-    desc: "進店後專人為您的商品進行分類與基本檢查，確認物件的完整度與大方向分類。",
-    image: "/images/現場初步檢視.jpg",
-  },
-  {
-    step: "02",
-    title: "專業儀器鑑定",
-    subtitle: "INSTRUMENT ANALYSIS",
-    desc: "使用精密光譜或比重儀器檢測基本成色，不損傷珠寶原貌，為您提供最科學的初步估價。",
-    image: "/images/專業儀器鑑定.jpg",
-  },
-  {
-    step: "03",
-    title: "精確秤重與報價",
-    subtitle: "WEIGHT & PRICING",
-    desc: "在您的面前使用經濟部標準檢驗局合格之電子磅秤精確秤重，並依當日公開行情詳細說明估價方式。價格公開透明，您覺得滿意、合理，再進行下一步驟。",
-    image: "/images/秤重確認價格.jpg",
-  },
-  {
-    step: "04",
-    title: "精準成色檢測 (熔融檢測)",
-    subtitle: "MELTING VERIFICATION",
-    desc: "針對成分複雜、非標準廠模或老舊金飾，若表面檢測有誤差疑慮，我們會現場進行熔融檢測，將雜質燒除，提煉出最純粹的貴金屬，取得百分之百精準的純度數據。",
-    image: "/images/精準成色檢測.jpg",
-  },
-  {
-    step: "05",
-    title: "當場現金交易",
-    subtitle: "TRANSACTION COMPLETE",
-    desc: "確認最終精準成色與金重後，核對身份簽署法定收購簿冊，當場以現金或即時轉帳完成交易，過程俐落且注重隱私。",
-    image:
-      "https://images.pexels.com/photos/33175648/pexels-photo-33175648.jpeg",
-  },
-]
-
-const meltingHighlights: MeltingHighlight[] = [
-  {
-    title: "拒絕傳統銀樓的「扣耗損」黑箱",
-    desc: "許多傳統老銀樓不論黃金純度，收購時一律習慣性扣除 3% 到 5% 的重量作為損耗。唐宋珠寶堅持科學誠信，透過熔融將黃金與雜質徹底分離，燒出來剩多少純金就秤多少重量，絕對不憑感覺亂扣顧客一分一毫。",
-  },
-  {
-    title: "釐清表面鍍金與內在純度",
-    desc: "現代加工技術高超，部分市售金飾、國外帶回的飾品可能僅表面包金（Gold Plated）或內部灌鉛。熔融檢測能透過高溫瞬間還原金屬本質，是國際貴金屬交易中最公允、最無法造假的終極鑑定手段。",
-  },
-  {
-    title: "保障特殊金飾與老舊飾品的價值",
-    desc: "長輩流傳下來的舊金飾、Ｋ金耳環、甚至牙金，常因沒有保單或成色標記模糊而被低估。透過熔融檢測將雜質燒除成純金塊後，不論來源與外觀多老舊，都能立刻變現它真正該有的尊貴價值。",
-  },
-]
-
-export default function PurchaseProcessPage() {
-  const pageRef = useRef<HTMLElement | null>(null)
-
-  useGSAP(
-    () => {
-      // 步驟區塊的逐個淡入與微移
-      const steps = gsap.utils.toArray<HTMLElement>(".step-card")
-      steps.forEach((step) => {
-        gsap.from(step, {
-          opacity: 0,
-          y: 50,
-          duration: 0.8,
-          scrollTrigger: {
-            trigger: step,
-            start: "top bottom-=100",
-            toggleActions: "play none none reverse",
-          },
-        })
-      })
+// A. 麵包屑導航
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "首頁",
+      item: BASE_URL,
     },
-    { scope: pageRef }
-  )
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "黃金回收收購流程",
+      item: `${BASE_URL}/purchase-process`,
+    },
+  ],
+}
 
+// B. HowTo：五步驟收購流程（最能觸發 Google 富摘要的 Schema）
+const howToSchema = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: "唐宋珠寶黃金回收收購流程",
+  description:
+    "台北萬華唐宋珠寶透明黃金回收五步驟，從現場初步檢視到當場現金交易，全程公開透明，拒絕黑箱扣耗損。",
+  image: "https://www.tangsong.com.tw/images/精準成色檢測.jpg",
+  totalTime: "PT30M",
+  estimatedCost: {
+    "@type": "MonetaryAmount",
+    currency: "TWD",
+    value: "0",
+  },
+  supply: [
+    {
+      "@type": "HowToSupply",
+      name: "待回收的黃金、K金、白金或鉑金飾品",
+    },
+    {
+      "@type": "HowToSupply",
+      name: "本人身份證件",
+    },
+  ],
+  tool: [
+    {
+      "@type": "HowToTool",
+      name: "精密光譜儀器（XRF 成色分析）",
+    },
+    {
+      "@type": "HowToTool",
+      name: "經濟部標準檢驗局合格電子磅秤",
+    },
+    {
+      "@type": "HowToTool",
+      name: "熔融檢測設備",
+    },
+  ],
+  step: [
+    {
+      "@type": "HowToStep",
+      position: 1,
+      name: "現場初步檢視",
+      text: "進店後專人為您的商品進行分類與基本檢查，確認物件的完整度與大方向分類。",
+      image: "https://www.tangsong.com.tw/images/現場初步檢視.jpg",
+    },
+    {
+      "@type": "HowToStep",
+      position: 2,
+      name: "專業儀器鑑定",
+      text: "使用精密光譜或比重儀器檢測基本成色，不損傷珠寶原貌，為您提供最科學的初步估價。",
+      image: "https://www.tangsong.com.tw/images/專業儀器鑑定.jpg",
+    },
+    {
+      "@type": "HowToStep",
+      position: 3,
+      name: "精確秤重與報價",
+      text: "在您面前使用經濟部標準檢驗局合格電子磅秤精確秤重，並依當日公開行情詳細說明估價方式，價格公開透明。",
+      image: "https://www.tangsong.com.tw/images/秤重確認價格.jpg",
+    },
+    {
+      "@type": "HowToStep",
+      position: 4,
+      name: "精準成色檢測（熔融檢測）",
+      text: "針對成分複雜或老舊金飾進行熔融檢測，將雜質燒除提煉出最純粹的貴金屬，取得百分之百精準的純度數據。",
+      image: "https://www.tangsong.com.tw/images/精準成色檢測.jpg",
+    },
+    {
+      "@type": "HowToStep",
+      position: 5,
+      name: "當場現金交易",
+      text: "確認最終成色與金重後，核對身份簽署法定收購簿冊，當場以現金或即時轉帳完成交易。",
+    },
+  ],
+}
+
+// C. Service：黃金回收服務
+const serviceSchema = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "@id": `${BASE_URL}/purchase-process#service`,
+  name: "高價黃金回收收購服務",
+  alternateName: "黃金收購、K金回收、鉑金回收",
+  description:
+    "唐宋珠寶提供高價黃金回收、黃金收購、K金回收、鉑金回收等貴金屬回收服務，採用熔融檢測確保最精準成色，透明秤重，當場現金交易，是台北萬華區黃金回收的最佳選擇。",
+  provider: {
+    "@type": "JewelryStore",
+    name: "唐宋珠寶",
+    url: BASE_URL,
+    telephone: "02-2306-9928",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "青山里西園路一段166-1號",
+      addressLocality: "萬華區",
+      addressRegion: "臺北市",
+      postalCode: "108",
+      addressCountry: "TW",
+    },
+  },
+  serviceType: "黃金回收估價",
+  areaServed: {
+    "@type": "City",
+    name: "台北市",
+  },
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "TWD",
+    description: "免費現場鑑定估價，無任何手續費",
+    availability: "https://schema.org/InStock",
+  },
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "可回收貴金屬項目",
+    itemListElement: [
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "9999純金回收" } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "18K金回收" } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "14K金回收" } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "白K金回收" } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "鉑金Pt950回收" } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "黃金條塊回收" } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "舊金飾回收" } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "鑽石珠寶回收" } },
+    ],
+  },
+}
+
+const combinedSchemas = [breadcrumbSchema, howToSchema, serviceSchema]
+
+// ==========================
+// 3. Page Component (Server)
+// ==========================
+export default function PurchaseProcessPage() {
   return (
-    <main
-      ref={pageRef}
-      className="w-full bg-[#fbfcfd] text-stone-900 font-sans overflow-hidden"
-    >
-      {/* ================= SECTION 1: 五步驟收購流程 ================= */}
-      <section className="w-full max-w-[1400px] mx-auto py-24 px-6 lg:px-12">
-        <div className="text-center mb-20">
-          <h2 className="text-xs font-bold tracking-[0.3em] text-[#b62f26] uppercase mb-2">
-            THE 5 STEPS
-          </h2>
-          <p className="text-2xl md:text-3xl font-serif font-bold tracking-widest text-stone-800">
-            「安心滿意」的收購流程
-          </p>
-          <p className="text-xs text-stone-400 mt-2 tracking-widest">
-            每一環節都在您的視線內透明進行
-          </p>
-        </div>
-
-        {/* 時間軸交錯排版 */}
-        <div className="relative flex flex-col gap-20 md:gap-32 before:absolute before:top-0 before:bottom-0 before:left-4 md:before:left-1/2 before:w-[1px] before:bg-stone-200">
-          {purchaseSteps.map((step, index) => {
-            const isEven = index % 2 === 0
-            return (
-              <div
-                key={step.step}
-                className={`step-card relative flex flex-col md:flex-row w-full ${
-                  isEven ? "md:flex-row" : "md:flex-row-reverse"
-                } items-center gap-8 md:gap-16`}
-              >
-                {/* 時間軸中心圓點 */}
-                <div className="absolute left-4 md:left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[#b62f26] border-4 border-white shadow-sm z-10" />
-
-                {/* 圖片區 */}
-                <div className="w-full md:w-1/2 pl-10 md:pl-0">
-                  <div className="relative w-full aspect-[16/10] overflow-hidden rounded-sm shadow-md bg-stone-100 group">
-                    <Image
-                      src={step.image}
-                      alt={step.title}
-                      fill
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
-                      unoptimized
-                    />
-                  </div>
-                </div>
-
-                {/* 文字內容區 */}
-                <div className="w-full md:w-1/2 pl-10 md:pl-0 flex flex-col justify-center">
-                  <div className="max-w-md">
-                    <span className="text-4xl md:text-5xl font-serif font-extrabold text-[#b62f26]/20 block mb-2">
-                      STEP {step.step}
-                    </span>
-                    <h3 className="text-lg md:text-xl font-bold tracking-wider text-stone-800 flex items-center gap-3">
-                      {step.title}
-                    </h3>
-                    <span className="text-[10px] font-bold tracking-widest text-stone-400 block mb-4 uppercase">
-                      {step.subtitle}
-                    </span>
-                    <p className="text-xs md:text-sm leading-[2.2] text-stone-600 tracking-wide text-justify">
-                      {step.desc}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </section>
-
-      {/* ================= SECTION 2: 為什麼需要熔融檢測 ================= */}
-      <section className="w-full bg-gradient-to-b from-stone-900 to-stone-950 text-white py-24 px-6 lg:px-12">
-        <div className="max-w-[1280px] mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-20 items-center">
-            {/* 左側：震撼視覺排版 */}
-            <div className="lg:col-span-2 flex flex-col gap-6">
-              <span className="text-xs font-bold tracking-[0.3em] text-[#D4AF37] uppercase">
-                SCIENCE & INTEGRITY
-              </span>
-              <h2 className="text-3xl md:text-4xl font-serif font-bold tracking-widest leading-smooth text-[#FDF5E6]">
-                為什麼交易需要
-                <br />
-                「熔融檢測」？
-              </h2>
-              <div className="w-12 h-[2px] bg-[#b62f26]" />
-              <p className="text-xs md:text-sm text-stone-400 leading-[2.3] tracking-widest text-justify">
-                傳統銀樓估價常依靠師傅的「肉眼眼力」或「敲擊聽聲」，這往往存在巨大灰色地帶，店家常以「成色不足」為由扣除大量耗損金額。唐宋珠寶引進科學熔融檢測，讓數據說話，用客觀事實捍衛您的財產權益。
-              </p>
-            </div>
-
-            {/* 右側：三大科普優勢列表 */}
-            <div className="lg:col-span-3 flex flex-col gap-8 md:gap-10">
-              {meltingHighlights.map((highlight, index) => (
-                <div
-                  key={index}
-                  className="bg-white/[0.03] border border-white/5 p-6 md:p-8 rounded-sm hover:border-[#D4AF37]/30 transition-all duration-300 group"
-                >
-                  <div className="flex gap-4 items-start">
-                    <span className="text-xl md:text-2xl font-serif font-bold text-[#D4AF37] opacity-60 group-hover:opacity-100 transition-opacity">
-                      0{index + 1}
-                    </span>
-                    <div className="flex flex-col gap-3">
-                      <h3 className="text-base md:text-lg font-bold tracking-wider text-[#FDF5E6]">
-                        {highlight.title}
-                      </h3>
-                      <p className="text-xs md:text-sm text-stone-400 leading-[2.2] tracking-wide text-justify">
-                        {highlight.desc}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ================= SECTION 3: 誠信保障與線上預約 CTA ================= */}
-      <section className="w-full bg-[#f4f5f7] py-20 px-6 text-center border-t border-stone-200">
-        <div className="max-w-2xl mx-auto flex flex-col items-center gap-6">
-          <h3 className="text-xl md:text-2xl font-serif font-bold tracking-widest text-stone-800">
-            想了解您手邊珍藏的即時價值嗎？
-          </h3>
-          <p className="text-xs md:text-sm text-stone-500 leading-loose tracking-wide">
-            歡迎親臨唐宋珠寶台中門市，我們將為您提供最專業、完全免費的成色鑑定與秤重估價服務。絕不強迫交易，流程完全公開。
-          </p>
-          <div className="flex flex-wrap justify-center gap-4 mt-4">
-            <Link
-              href="/contact"
-              className="bg-[#b62f26] text-white px-8 py-4 text-xs font-bold tracking-[0.2em] uppercase hover:bg-[#9c241c] transition-colors shadow-md rounded-sm"
-            >
-              預約親臨現場鑑定
-            </Link>
-            <Link
-              href="/"
-              className="bg-white text-stone-800 border border-stone-300 px-8 py-4 text-xs font-bold tracking-[0.2em] uppercase hover:bg-stone-50 transition-colors rounded-sm"
-            >
-              返回大廳行情表
-            </Link>
-          </div>
-        </div>
-      </section>
-    </main>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(combinedSchemas) }}
+      />
+      <PurchaseProcessClient />
+    </>
   )
 }
