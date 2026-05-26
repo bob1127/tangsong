@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 import ContactForm from "./ContactForm"
 
-const BASE_URL = "https://www.tangsong.com.tw"
+import { SITE_URL, canonicalUrl } from "@lib/util/site-url"
 
 // ==========================
 // ISR：60 秒重新驗證
@@ -35,13 +35,13 @@ export const metadata: Metadata = {
     title: "聯絡我們 | 預約黃金鑑定、回收諮詢 | 唐宋珠寶 台北萬華",
     description:
       "台北萬華唐宋珠寶，提供黃金回收估價、K金收購、鉑金回收、珠寶鑑定預約服務。電話 02-2306-9928，或填寫線上表單，專業顧問即時回覆。",
-    url: `${BASE_URL}/contact`,
+    url: `${SITE_URL}/contact`,
     siteName: "唐宋珠寶",
     locale: "zh_TW",
     type: "website",
     images: [
       {
-        url: `${BASE_URL}/images/0002.jpg`,
+        url: `${SITE_URL}/images/0002.jpg`,
         width: 1200,
         height: 630,
         alt: "聯絡唐宋珠寶 - 台北萬華黃金回收諮詢與門市預約",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     ],
   },
   alternates: {
-    canonical: `${BASE_URL}/tw/contact`,
+    canonical: canonicalUrl("/contact"),
   },
 }
 
@@ -62,12 +62,12 @@ const breadcrumbSchema = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   itemListElement: [
-    { "@type": "ListItem", position: 1, name: "首頁", item: BASE_URL },
+    { "@type": "ListItem", position: 1, name: "首頁", item: SITE_URL },
     {
       "@type": "ListItem",
       position: 2,
       name: "聯絡我們",
-      item: `${BASE_URL}/contact`,
+      item: `${SITE_URL}/contact`,
     },
   ],
 }
@@ -76,28 +76,28 @@ const breadcrumbSchema = {
 const contactPageSchema = {
   "@context": "https://schema.org",
   "@type": "ContactPage",
-  "@id": `${BASE_URL}/contact#page`,
+  "@id": `${SITE_URL}/contact#page`,
   name: "聯絡唐宋珠寶 | 黃金回收諮詢與門市預約",
   description:
     "填寫線上諮詢表單或透過電話、LINE 聯絡唐宋珠寶專業顧問，提供黃金回收估價、K金收購、鉑金回收、珠寶鑑定預約等服務。",
-  url: `${BASE_URL}/contact`,
-  image: `${BASE_URL}/images/0002.jpg`,
-  mainEntity: { "@id": `${BASE_URL}/#store` },
+  url: `${SITE_URL}/contact`,
+  image: `${SITE_URL}/images/0002.jpg`,
+  mainEntity: { "@id": `${SITE_URL}/#store` },
 }
 
 // C. LocalBusiness（完整商家聯絡資訊，強化在地搜尋）
 const localBusinessSchema = {
   "@context": "https://schema.org",
   "@type": "JewelryStore",
-  "@id": `${BASE_URL}/#store`,
+  "@id": `${SITE_URL}/#store`,
   name: "唐宋珠寶",
   alternateName: "Tangsong Jewelry",
   description:
     "台北萬華龍山寺對面專業珠寶銀樓，提供高價黃金回收、黃金收購、K金回收、鉑金回收、鑽石鑑定及客製化珠寶服務。",
-  url: BASE_URL,
+  url: SITE_URL,
   telephone: "02-2306-9928",
   email: "a0223069928@gmail.com",
-  image: `${BASE_URL}/logo.png`,
+  image: `${SITE_URL}/logo.png`,
   priceRange: "$$$",
   address: {
     "@type": "PostalAddress",

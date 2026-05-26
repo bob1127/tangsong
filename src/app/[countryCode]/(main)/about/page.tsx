@@ -2,8 +2,8 @@ import { Metadata } from "next"
 import HeroSlider from "../../../../components/Slider"
 import Feature from "../../../../components/CollectionShowcase"
 
-const BASE_URL = "https://www.tangsong.com.tw"
-const OG_IMAGE = `${BASE_URL}/images/18e59f52-18b7-413b-a783-ff21e3c51ad3.png`
+import { SITE_URL, canonicalUrl, absolutePublicUrl } from "@lib/util/site-url"
+const OG_IMAGE = `${SITE_URL}/images/18e59f52-18b7-413b-a783-ff21e3c51ad3.png`
 
 // ==========================
 // ISR：60 秒重新驗證
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
       "關於唐宋珠寶 | 台北萬華在地銀樓、專業黃金鑑定與高價收購",
     description:
       "深耕台北萬華龍山寺商圈十餘年，引進 XRF 光譜儀與熔融檢測，提供黃金回收、K金收購、鉑金回收。公開透明、誠信買賣，台北萬華黃金收購首選。",
-    url: `${BASE_URL}/about`,
+    url: `${SITE_URL}/about`,
     siteName: "唐宋珠寶",
     locale: "zh_TW",
     type: "website",
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     ],
   },
   alternates: {
-    canonical: `${BASE_URL}/tw/about`,
+    canonical: canonicalUrl("/about"),
   },
 }
 
@@ -69,12 +69,12 @@ const breadcrumbSchema = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   itemListElement: [
-    { "@type": "ListItem", position: 1, name: "首頁", item: BASE_URL },
+    { "@type": "ListItem", position: 1, name: "首頁", item: SITE_URL },
     {
       "@type": "ListItem",
       position: 2,
       name: "關於唐宋珠寶",
-      item: `${BASE_URL}/about`,
+      item: `${SITE_URL}/about`,
     },
   ],
 }
@@ -83,27 +83,27 @@ const breadcrumbSchema = {
 const aboutPageSchema = {
   "@context": "https://schema.org",
   "@type": "AboutPage",
-  "@id": `${BASE_URL}/about#page`,
+  "@id": `${SITE_URL}/about#page`,
   name: "關於唐宋珠寶 | 台北萬華在地銀樓",
   description:
     "唐宋珠寶深耕台北萬華龍山寺商圈十餘年，提供黃金回收、K金收購、鉑金回收、鑽石鑑定等服務，引進 XRF 光譜儀與熔融檢測設備，全程公開透明。",
-  url: `${BASE_URL}/about`,
+  url: `${SITE_URL}/about`,
   image: OG_IMAGE,
-  mainEntity: { "@id": `${BASE_URL}/#store` },
+  mainEntity: { "@id": `${SITE_URL}/#store` },
 }
 
 // C. JewelryStore（完整商家資訊）
 const storeSchema = {
   "@context": "https://schema.org",
   "@type": "JewelryStore",
-  "@id": `${BASE_URL}/#store`,
+  "@id": `${SITE_URL}/#store`,
   name: "唐宋珠寶",
   alternateName: "Tangsong Jewelry",
   description:
     "台北萬華龍山寺對面專業珠寶銀樓，深耕在地十餘年，提供高價黃金回收、黃金收購、K金回收、K金收購、白金回收、鉑金回收。引進 XRF 光譜儀非破壞式鑑定及熔融檢測，全程透明，誠信買賣。",
   image: OG_IMAGE,
-  logo: `${BASE_URL}/logo.png`,
-  url: BASE_URL,
+  logo: `${SITE_URL}/logo.png`,
+  url: SITE_URL,
   telephone: "02-2306-9928",
   email: "a0223069928@gmail.com",
   priceRange: "$$$",
@@ -166,35 +166,35 @@ const howToSchema = {
       position: 1,
       name: "現場初步檢視",
       text: "進店後專人為您的商品進行分類與基本檢查，確認物件完整度與大方向分類。",
-      url: `${BASE_URL}/about#step1`,
+      url: `${SITE_URL}/about#step1`,
     },
     {
       "@type": "HowToStep",
       position: 2,
       name: "專業儀器鑑定",
       text: "使用精密 XRF 光譜或比重儀器檢測基本成色，不損傷珠寶原貌，提供最科學的初步估價。",
-      url: `${BASE_URL}/about#step2`,
+      url: `${SITE_URL}/about#step2`,
     },
     {
       "@type": "HowToStep",
       position: 3,
       name: "秤重確認價格",
       text: "在您面前以經濟部標準檢驗局合格電子磅秤精確秤重，並依當日公開行情詳細說明估價，您滿意後再進行下一步。",
-      url: `${BASE_URL}/about#step3`,
+      url: `${SITE_URL}/about#step3`,
     },
     {
       "@type": "HowToStep",
       position: 4,
       name: "精準成色檢測（熔融檢測）",
       text: "針對成分複雜或老舊金飾進行熔融檢測，將雜質燒除提煉純金，取得百分之百精準的純度數據，拒絕憑感覺扣耗損。",
-      url: `${BASE_URL}/about#step4`,
+      url: `${SITE_URL}/about#step4`,
     },
     {
       "@type": "HowToStep",
       position: 5,
       name: "完成現金交易",
       text: "確認最終成色與金重後，核對身份簽署法定收購簿冊，當場以現金或即時轉帳完成交易。",
-      url: `${BASE_URL}/about#step5`,
+      url: `${SITE_URL}/about#step5`,
     },
   ],
 }

@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 import Image from "next/image"
 
-const BASE_URL = "https://www.tangsong.com.tw"
+import { SITE_URL, canonicalUrl } from "@lib/util/site-url"
 
 // ==========================
 // ISR：60 秒重新驗證
@@ -88,13 +88,13 @@ export const metadata: Metadata = {
       "高價收購項目 | 黃金、K金、鉑金、鑽石、名錶、翡翠 | 唐宋珠寶 台北萬華",
     description:
       "台北萬華唐宋珠寶高價收購黃金條塊、K金、鉑金、GIA鑽石、名錶、翡翠玉石。透明秤重、即時現金，專業鑑定無黑箱。",
-    url: `${BASE_URL}/purchase-categories`,
+    url: `${SITE_URL}/purchase-categories`,
     siteName: "唐宋珠寶",
     locale: "zh_TW",
     type: "website",
     images: [
       {
-        url: `${BASE_URL}/images/0002.jpg`,
+        url: `${SITE_URL}/images/0002.jpg`,
         width: 1200,
         height: 630,
         alt: "唐宋珠寶高價收購項目 - 黃金K金鉑金鑽石名錶翡翠",
@@ -102,7 +102,7 @@ export const metadata: Metadata = {
     ],
   },
   alternates: {
-    canonical: `${BASE_URL}/tw/purchase-categories`,
+    canonical: canonicalUrl("/purchase-categories"),
   },
 }
 
@@ -115,12 +115,12 @@ const breadcrumbSchema = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   itemListElement: [
-    { "@type": "ListItem", position: 1, name: "首頁", item: BASE_URL },
+    { "@type": "ListItem", position: 1, name: "首頁", item: SITE_URL },
     {
       "@type": "ListItem",
       position: 2,
       name: "高價收購項目",
-      item: `${BASE_URL}/purchase-categories`,
+      item: `${SITE_URL}/purchase-categories`,
     },
   ],
 }
@@ -129,13 +129,13 @@ const breadcrumbSchema = {
 const collectionPageSchema = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
-  "@id": `${BASE_URL}/purchase-categories#page`,
+  "@id": `${SITE_URL}/purchase-categories#page`,
   name: "唐宋珠寶高價收購項目",
   description:
     "台北萬華唐宋珠寶高價收購黃金條塊、18K/14K金飾、鉑金條塊、GIA鑽石珠寶、名錶、翡翠玉石，透明秤重、資深鑑定、即時現金交易。",
-  url: `${BASE_URL}/purchase-categories`,
-  image: `${BASE_URL}/images/0002.jpg`,
-  provider: { "@id": `${BASE_URL}/#store` },
+  url: `${SITE_URL}/purchase-categories`,
+  image: `${SITE_URL}/images/0002.jpg`,
+  provider: { "@id": `${SITE_URL}/#store` },
 }
 
 // C. 六項收購服務的 ItemList
@@ -143,7 +143,7 @@ const serviceListSchema = {
   "@context": "https://schema.org",
   "@type": "ItemList",
   name: "唐宋珠寶收購服務清單",
-  url: `${BASE_URL}/purchase-categories`,
+  url: `${SITE_URL}/purchase-categories`,
   numberOfItems: purchaseCategories.length,
   itemListElement: purchaseCategories.map((cat, index) => ({
     "@type": "ListItem",
@@ -152,11 +152,11 @@ const serviceListSchema = {
       "@type": "Service",
       name: cat.title,
       description: cat.description,
-      url: `${BASE_URL}/purchase-categories`,
+      url: `${SITE_URL}/purchase-categories`,
       provider: {
         "@type": "JewelryStore",
         name: "唐宋珠寶",
-        url: BASE_URL,
+        url: SITE_URL,
       },
       areaServed: {
         "@type": "City",

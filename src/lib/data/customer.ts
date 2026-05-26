@@ -1,6 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { publicPath } from "@lib/util/site-url"
 import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
@@ -140,7 +141,7 @@ export async function signout(countryCode: string) {
   const cartCacheTag = await getCacheTag("carts")
   revalidateTag(cartCacheTag)
 
-  redirect(`/${countryCode}/account`)
+  redirect(publicPath("/account", countryCode))
 }
 
 export async function transferCart() {

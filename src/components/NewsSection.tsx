@@ -150,7 +150,7 @@ export default async function NewsSection() {
             return (
               <a
                 key={article.id || index}
-                href={`/tw/blog/${article.handle}`}
+                href={`/blog/${article.handle}`}
                 className="group flex flex-col bg-white rounded-none shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 border border-stone-200 overflow-hidden"
               >
                 <div className="relative h-60 overflow-hidden rounded-none">

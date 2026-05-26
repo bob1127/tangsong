@@ -3,6 +3,7 @@ import Hero from "@modules/home/components/hero"
 import { getRegion } from "@lib/data/regions"
 import { listProducts } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
+import { absolutePublicUrl, canonicalUrl } from "@lib/util/site-url"
 
 // ISR：首頁每 60 秒重新生成一次，後台新增商品 60 秒內前端可見
 export const revalidate = 60
@@ -53,6 +54,9 @@ export const metadata: Metadata = {
         alt: "唐宋珠寶 - 台北萬華高價黃金回收收購與珠寶鑑賞",
       },
     ],
+  },
+  alternates: {
+    canonical: canonicalUrl("/"),
   },
 }
 
@@ -292,12 +296,11 @@ function buildProductListSchema(
   products: HttpTypes.StoreProduct[],
   countryCode: string
 ) {
-  const baseUrl = "https://www.tangsong.com.tw"
   return {
     "@context": "https://schema.org",
     "@type": "ItemList",
     name: "唐宋珠寶精選商品",
-    url: `${baseUrl}/${countryCode}/store`,
+    url: absolutePublicUrl("/store", countryCode),
     itemListElement: products.map((product, index) => {
       const cheapestVariant = (product.variants as any[])
         ?.filter((v) => !!v.calculated_price?.calculated_amount)
@@ -315,7 +318,7 @@ function buildProductListSchema(
       const item: Record<string, unknown> = {
         "@type": "Product",
         name: product.title,
-        url: `${baseUrl}/${countryCode}/products/${product.handle}`,
+        url: absolutePublicUrl(`/products/${product.handle}`, countryCode),
         ...(product.description && { description: product.description }),
         ...(product.thumbnail && { image: product.thumbnail }),
       }
@@ -326,7 +329,7 @@ function buildProductListSchema(
           priceCurrency: currency,
           price: price,
           availability: "https://schema.org/InStock",
-          url: `${baseUrl}/${countryCode}/products/${product.handle}`,
+          url: absolutePublicUrl(`/products/${product.handle}`, countryCode),
         }
       }
 

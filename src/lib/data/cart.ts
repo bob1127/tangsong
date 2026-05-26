@@ -1,6 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { publicPath } from "@lib/util/site-url"
 import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
@@ -419,7 +420,9 @@ export async function placeOrder(cartId?: string) {
     revalidateTag(orderCacheTag)
 
     removeCartId()
-    redirect(`/${countryCode}/order/${cartRes?.order.id}/confirmed`)
+    redirect(
+      publicPath(`/order/${cartRes?.order.id}/confirmed`, countryCode)
+    )
   }
 
   // cart.complete() returned type="cart" — payment authorization failed
@@ -453,7 +456,7 @@ export async function updateRegion(countryCode: string, currentPath: string) {
   const productsCacheTag = await getCacheTag("products")
   revalidateTag(productsCacheTag)
 
-  redirect(`/${countryCode}${currentPath}`)
+  redirect(publicPath(currentPath, countryCode))
 }
 
 export async function listCartOptions() {

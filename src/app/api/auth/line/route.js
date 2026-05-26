@@ -16,7 +16,7 @@ async function POST(req) {
         }
         // 動態取得目前的網址
         const url = new URL(req.url);
-        const redirectUri = `${url.protocol}//${url.host}/tw/callback/line`;
+        const redirectUri = `${url.protocol}//${url.host}/callback/line`;
         console.log('====== 🟢 開始執行 LINE 登入流程 ======');
         // 【動作一】跟 LINE 交換 Token
         const tokenParams = new URLSearchParams({

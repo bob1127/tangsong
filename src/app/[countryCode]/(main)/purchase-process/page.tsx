@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 import PurchaseProcessClient from "./PurchaseProcessClient"
 
-const BASE_URL = "https://www.tangsong.com.tw"
+import { SITE_URL, canonicalUrl } from "@lib/util/site-url"
 
 // ==========================
 // ISR：60 秒重新驗證
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
       "黃金回收收購流程 | 五步驟透明估價、熔融檢測、當場現金 | 唐宋珠寶",
     description:
       "台北萬華唐宋珠寶，五步驟透明收購流程：初步檢視、儀器鑑定、秤重報價、熔融檢測、現金交易。拒絕扣耗損，科學數據，安心放心。",
-    url: `${BASE_URL}/purchase-process`,
+    url: `${SITE_URL}/purchase-process`,
     siteName: "唐宋珠寶",
     locale: "zh_TW",
     type: "website",
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     ],
   },
   alternates: {
-    canonical: `${BASE_URL}/tw/purchase-process`,
+    canonical: canonicalUrl("/purchase-process"),
   },
 }
 
@@ -69,13 +69,13 @@ const breadcrumbSchema = {
       "@type": "ListItem",
       position: 1,
       name: "首頁",
-      item: BASE_URL,
+      item: SITE_URL,
     },
     {
       "@type": "ListItem",
       position: 2,
       name: "黃金回收收購流程",
-      item: `${BASE_URL}/purchase-process`,
+      item: `${SITE_URL}/purchase-process`,
     },
   ],
 }
@@ -160,7 +160,7 @@ const howToSchema = {
 const serviceSchema = {
   "@context": "https://schema.org",
   "@type": "Service",
-  "@id": `${BASE_URL}/purchase-process#service`,
+  "@id": `${SITE_URL}/purchase-process#service`,
   name: "高價黃金回收收購服務",
   alternateName: "黃金收購、K金回收、鉑金回收",
   description:
@@ -168,7 +168,7 @@ const serviceSchema = {
   provider: {
     "@type": "JewelryStore",
     name: "唐宋珠寶",
-    url: BASE_URL,
+    url: SITE_URL,
     telephone: "02-2306-9928",
     address: {
       "@type": "PostalAddress",

@@ -33,7 +33,9 @@ const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
   >(undefined)
 
   const { countryCode } = useParams()
-  const currentPath = usePathname().split(`/${countryCode}`)[1]
+  const pathname = usePathname()
+  const currentPath =
+    pathname.replace(new RegExp(`^/${countryCode}`), "") || "/"
 
   const { state, close } = toggleState
 

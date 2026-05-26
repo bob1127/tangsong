@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import React from "react"
+import { publicPath } from "@lib/util/site-url"
 
 /**
  * Use this component to create a Next.js `<Link />` that persists the current country code in the url,
@@ -24,13 +25,12 @@ const LocalizedClientLink = ({
   [x: string]: any
 }) => {
   const { countryCode } = useParams()
-
-  // 🚀 關鍵修改 3：判斷如果當前語系是 "tw"，就將 prefix 設為空白 (不加上 /tw)
-  const prefix = countryCode === "tw" ? "" : `/${countryCode}`
+  const resolvedCountry =
+    typeof countryCode === "string" ? countryCode : undefined
 
   return (
     <Link
-      href={`${prefix}${href}`}
+      href={publicPath(href, resolvedCountry)}
       className={className}
       onClick={onClick}
       passHref={passHref}

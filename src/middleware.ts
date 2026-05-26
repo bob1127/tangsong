@@ -1,9 +1,10 @@
 import { HttpTypes } from "@medusajs/types"
 import { NextRequest, NextResponse } from "next/server"
+import { PRIMARY_COUNTRY_CODE } from "@lib/util/site-url"
 
 const BACKEND_URL = process.env.MEDUSA_BACKEND_URL
 const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
-const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "tw" // 💡 確保預設是 tw
+const DEFAULT_REGION = PRIMARY_COUNTRY_CODE
 
 const regionMapCache = {
   regionMap: new Map<string, HttpTypes.StoreRegion>(),
@@ -94,8 +95,23 @@ async function getCountryCode(
 }
 
 export async function middleware(request: NextRequest) {
-  let redirectUrl = request.nextUrl.href
-  let response = NextResponse.redirect(redirectUrl, 307)
+  const pathname = request.nextUrl.pathname
+
+  if (pathname.includes(".")) {
+    return NextResponse.next()
+  }
+
+  const segments = pathname.split("/").filter(Boolean)
+  const firstSegment = segments[0]?.toLowerCase()
+
+  // SEO：舊網址 /tw/* 永久導向至無前綴版本
+  if (firstSegment === DEFAULT_REGION) {
+    const stripped =
+      segments.length > 1 ? `/${segments.slice(1).join("/")}` : "/"
+    const destination = new URL(stripped, request.url)
+    destination.search = request.nextUrl.search
+    return NextResponse.redirect(destination, 301)
+  }
 
   let cacheIdCookie = request.cookies.get("_medusa_cache_id")
   let cacheId = cacheIdCookie?.value || crypto.randomUUID()
@@ -104,48 +120,40 @@ export async function middleware(request: NextRequest) {
   const countryCode = regionMap && (await getCountryCode(request, regionMap))
 
   const urlHasCountryCode =
-    countryCode && request.nextUrl.pathname.split("/")[1].includes(countryCode)
+    countryCode && firstSegment === countryCode
 
-  if (urlHasCountryCode && cacheIdCookie) {
-    return NextResponse.next()
-  }
-
-  if (urlHasCountryCode && !cacheIdCookie) {
-    response.cookies.set("_medusa_cache_id", cacheId, {
-      maxAge: 60 * 60 * 24,
-    })
-    return response
-  }
-
-  if (request.nextUrl.pathname.includes(".")) {
-    return NextResponse.next()
-  }
-
-  const redirectPath =
-    request.nextUrl.pathname === "/" ? "" : request.nextUrl.pathname
-
-  const queryString = request.nextUrl.search ? request.nextUrl.search : ""
-
-  if (!urlHasCountryCode && countryCode) {
-    redirectUrl = `${request.nextUrl.origin}/${countryCode}${redirectPath}${queryString}`
-    
-    // 🚀 關鍵修改 1：改用 rewrite，隱藏網址列上的 /tw
-    response = NextResponse.rewrite(`${redirectUrl}`)
-    
-    // 🚀 關鍵修改 2：因為改成 rewrite 不會重新載入，必須在這裡強制補上 Cookie
+  if (urlHasCountryCode) {
+    const response = NextResponse.next()
     if (!cacheIdCookie) {
       response.cookies.set("_medusa_cache_id", cacheId, {
         maxAge: 60 * 60 * 24,
       })
     }
-  } else if (!urlHasCountryCode && !countryCode) {
-    return new NextResponse(
-      "No valid regions configured. Please set up regions with countries in your Medusa Admin.",
-      { status: 500 }
-    )
+    return response
   }
 
-  return response
+  const redirectPath = pathname === "/" ? "" : pathname
+  const queryString = request.nextUrl.search
+
+  if (countryCode) {
+    const internalUrl = new URL(
+      `/${countryCode}${redirectPath}${queryString}`,
+      request.url
+    )
+    const response = NextResponse.rewrite(internalUrl)
+
+    if (!cacheIdCookie) {
+      response.cookies.set("_medusa_cache_id", cacheId, {
+        maxAge: 60 * 60 * 24,
+      })
+    }
+    return response
+  }
+
+  return new NextResponse(
+    "No valid regions configured. Please set up regions with countries in your Medusa Admin.",
+    { status: 500 }
+  )
 }
 
 export const config = {

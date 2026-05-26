@@ -4,11 +4,14 @@ import StoreTemplate from "@modules/store/templates"
 import { listProducts } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
 import { HttpTypes } from "@medusajs/types"
+import {
+  SITE_URL,
+  absolutePublicUrl,
+  canonicalUrl,
+} from "@lib/util/site-url"
 
 // ISR：商城頁每 60 秒重新驗證，後台新增/下架商品 60 秒內前端可見
 export const revalidate = 60
-
-const BASE_URL = "https://www.tangsong.com.tw"
 
 // ==========================
 // 1. 商城頁面 SEO 設定
@@ -37,7 +40,7 @@ export const metadata: Metadata = {
     title: "線上商城 | 黃金、K金、鑽石、鉑金珠寶首飾 | 唐宋珠寶 Tangsong",
     description:
       "精選9999純金、K金、鉑金婚戒、鑽石珠寶等首飾。台北萬華實體銀樓，每件商品嚴格鑑定，提供免費諮詢與客製化服務。",
-    url: `${BASE_URL}/store`,
+    url: `${SITE_URL}/store`,
     siteName: "唐宋珠寶",
     locale: "zh_TW",
     type: "website",
@@ -51,7 +54,7 @@ export const metadata: Metadata = {
     ],
   },
   alternates: {
-    canonical: `${BASE_URL}/tw/store`,
+    canonical: canonicalUrl("/store"),
   },
 }
 
@@ -61,11 +64,11 @@ export const metadata: Metadata = {
 const collectionSchema = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
-  "@id": `${BASE_URL}/store#collection`,
+  "@id": `${SITE_URL}/store#collection`,
   name: "唐宋珠寶線上商城",
   description:
     "唐宋珠寶精選黃金、K金、鉑金婚戒、鑽石珠寶首飾，每件商品均經嚴格鑑定，值得信賴。",
-  url: `${BASE_URL}/store`,
+  url: `${SITE_URL}/store`,
   image: "https://www.tangsong.com.tw/images/0002.jpg",
   breadcrumb: {
     "@type": "BreadcrumbList",
@@ -74,13 +77,13 @@ const collectionSchema = {
         "@type": "ListItem",
         position: 1,
         name: "首頁",
-        item: BASE_URL,
+        item: SITE_URL,
       },
       {
         "@type": "ListItem",
         position: 2,
         name: "線上商城",
-        item: `${BASE_URL}/store`,
+        item: `${SITE_URL}/store`,
       },
     ],
   },
@@ -97,7 +100,7 @@ function buildItemListSchema(
     "@context": "https://schema.org",
     "@type": "ItemList",
     name: "唐宋珠寶精選商品清單",
-    url: `${BASE_URL}/${countryCode}/store`,
+    url: absolutePublicUrl("/store", countryCode),
     numberOfItems: products.length,
     itemListElement: products.map((product, index) => {
       const cheapestVariant = (product.variants as any[])
@@ -116,7 +119,7 @@ function buildItemListSchema(
       const item: Record<string, unknown> = {
         "@type": "Product",
         name: product.title,
-        url: `${BASE_URL}/${countryCode}/products/${product.handle}`,
+        url: absolutePublicUrl(`/products/${product.handle}`, countryCode),
         ...(product.description && { description: product.description }),
         ...(product.thumbnail && { image: product.thumbnail }),
         brand: {
@@ -135,7 +138,7 @@ function buildItemListSchema(
             "@type": "Organization",
             name: "唐宋珠寶",
           },
-          url: `${BASE_URL}/${countryCode}/products/${product.handle}`,
+          url: absolutePublicUrl(`/products/${product.handle}`, countryCode),
         }
       }
 
