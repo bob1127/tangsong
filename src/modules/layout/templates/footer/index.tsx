@@ -17,8 +17,10 @@ export default function Footer() {
   ]
 
   const collections = [
+    { id: "c0", title: "關於我們", handle: "/about" },
     { id: "c1", title: "隱私條款", handle: "/privacy" },
     { id: "c2", title: "關於收購/鑒價", handle: "/purchase-process" },
+    { id: "c4", title: "專欄文章", handle: "/blog" },
     {
       id: "c3",
       title: "門市",
@@ -188,8 +190,8 @@ export default function Footer() {
                   </li>
                 ))}
                 <li className="mt-4">
-                  <a
-                    href="#"
+                  <LocalizedClientLink
+                    href="/blog"
                     className="flex items-center gap-2 hover:text-[#82111F] transition-colors duration-300"
                   >
                     焦點新聞
@@ -206,7 +208,7 @@ export default function Footer() {
                         d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
                       />
                     </svg>
-                  </a>
+                  </LocalizedClientLink>
                 </li>
               </ul>
             </div>
@@ -217,21 +219,21 @@ export default function Footer() {
               </h3>
               <ul className="flex flex-col gap-4 text-gray-400">
                 <li>
-                  <a
-                    href="#"
+                  <LocalizedClientLink
+                    href="/blog"
                     className="hover:text-[#82111F] transition-colors duration-300"
                   >
                     最新消息
-                  </a>
+                  </LocalizedClientLink>
                 </li>
 
                 <li>
-                  <a
+                  <LocalizedClientLink
                     href="/contact"
                     className="hover:text-[#82111F] transition-colors duration-300"
                   >
                     聯絡我們
-                  </a>
+                  </LocalizedClientLink>
                 </li>
                 <li className="mt-4 flex gap-4">
                   <a

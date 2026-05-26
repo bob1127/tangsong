@@ -9,6 +9,8 @@ import ScientificDetection from "../../../../components/ScientificDetection"
 import HistoricalTrendChart from "../../../../components/HistoricalTrendChart" // 你的路徑
 import FeaturedProducts from "../../../../components/FeaturedProducts"
 import GoldFAQ from "../../../../components/GoldFAQ"
+import HomeSiteLinks from "../site-links"
+
 const Hero = () => {
   return (
     <div className="w-full border-b border-ui-border-base relative bg-ui-bg-subtle">
@@ -21,6 +23,7 @@ const Hero = () => {
       <News />
       <HistoricalTrendChart />
       <GoldFAQ />
+      <HomeSiteLinks />
     </div>
   )
 }

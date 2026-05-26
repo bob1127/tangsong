@@ -1,8 +1,7 @@
 import { Metadata } from "next"
-import HeroSlider from "../../../../components/Slider"
-import Feature from "../../../../components/CollectionShowcase"
+import AboutClient from "./AboutClient"
+import { SITE_URL, canonicalUrl } from "@lib/util/site-url"
 
-import { SITE_URL, canonicalUrl, absolutePublicUrl } from "@lib/util/site-url"
 const OG_IMAGE = `${SITE_URL}/images/18e59f52-18b7-413b-a783-ff21e3c51ad3.png`
 
 // ==========================
@@ -11,7 +10,7 @@ const OG_IMAGE = `${SITE_URL}/images/18e59f52-18b7-413b-a783-ff21e3c51ad3.png`
 export const revalidate = 60
 
 // ==========================
-// 1. SEO Metadata
+// 1. SEO Metadata（Server Component 才能 export）
 // ==========================
 export const metadata: Metadata = {
   title:
@@ -38,8 +37,7 @@ export const metadata: Metadata = {
     "Tangsong Jewelry",
   ],
   openGraph: {
-    title:
-      "關於唐宋珠寶 | 台北萬華在地銀樓、專業黃金鑑定與高價收購",
+    title: "關於唐宋珠寶 | 台北萬華在地銀樓、專業黃金鑑定與高價收購",
     description:
       "深耕台北萬華龍山寺商圈十餘年，引進 XRF 光譜儀與熔融檢測，提供黃金回收、K金收購、鉑金回收。公開透明、誠信買賣，台北萬華黃金收購首選。",
     url: `${SITE_URL}/about`,
@@ -64,7 +62,6 @@ export const metadata: Metadata = {
 // 2. 結構化資料
 // ==========================
 
-// A. 麵包屑
 const breadcrumbSchema = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
@@ -79,7 +76,6 @@ const breadcrumbSchema = {
   ],
 }
 
-// B. AboutPage
 const aboutPageSchema = {
   "@context": "https://schema.org",
   "@type": "AboutPage",
@@ -92,7 +88,6 @@ const aboutPageSchema = {
   mainEntity: { "@id": `${SITE_URL}/#store` },
 }
 
-// C. JewelryStore（完整商家資訊）
 const storeSchema = {
   "@context": "https://schema.org",
   "@type": "JewelryStore",
@@ -123,30 +118,55 @@ const storeSchema = {
   openingHoursSpecification: [
     {
       "@type": "OpeningHoursSpecification",
-      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      dayOfWeek: [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ],
       opens: "11:00",
       closes: "21:00",
     },
   ],
-  sameAs: [
-    "https://line.me/R/ti/p/@nfr7726z",
-  ],
+  sameAs: ["https://line.me/R/ti/p/@nfr7726z"],
   hasOfferCatalog: {
     "@type": "OfferCatalog",
     name: "唐宋珠寶服務項目",
     itemListElement: [
-      { "@type": "Offer", itemOffered: { "@type": "Service", name: "高價黃金回收" } },
-      { "@type": "Offer", itemOffered: { "@type": "Service", name: "K金收購" } },
-      { "@type": "Offer", itemOffered: { "@type": "Service", name: "鉑金回收" } },
-      { "@type": "Offer", itemOffered: { "@type": "Service", name: "鑽石鑑定與回收" } },
-      { "@type": "Offer", itemOffered: { "@type": "Service", name: "客製化珠寶訂製" } },
-      { "@type": "Offer", itemOffered: { "@type": "Service", name: "舊金翻新修改" } },
-      { "@type": "Offer", itemOffered: { "@type": "Service", name: "免費貴金屬鑑定估價" } },
+      {
+        "@type": "Offer",
+        itemOffered: { "@type": "Service", name: "高價黃金回收" },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: { "@type": "Service", name: "K金收購" },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: { "@type": "Service", name: "鉑金回收" },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: { "@type": "Service", name: "鑽石鑑定與回收" },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: { "@type": "Service", name: "客製化珠寶訂製" },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: { "@type": "Service", name: "舊金翻新修改" },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: { "@type": "Service", name: "免費貴金屬鑑定估價" },
+      },
     ],
   },
 }
 
-// D. HowTo（黃金收購五步驟，與 purchase-process 頁呼應）
 const howToSchema = {
   "@context": "https://schema.org",
   "@type": "HowTo",
@@ -199,20 +219,24 @@ const howToSchema = {
   ],
 }
 
-const combinedSchemas = [breadcrumbSchema, aboutPageSchema, storeSchema, howToSchema]
+const combinedSchemas = [
+  breadcrumbSchema,
+  aboutPageSchema,
+  storeSchema,
+  howToSchema,
+]
 
 // ==========================
-// 3. Page Component
+// 3. Page Component（Server）
 // ==========================
 export default function AboutPage() {
   return (
-    <div className="w-full bg-[#FDF5E6]/30 font-sans overflow-hidden">
+    <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(combinedSchemas) }}
       />
-      <HeroSlider />
-      <Feature />
-    </div>
+      <AboutClient />
+    </>
   )
 }

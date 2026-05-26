@@ -1,11 +1,15 @@
-import { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { listProducts } from "@lib/data/products"
 import { getRegion, listRegions } from "@lib/data/regions"
+import { listProducts } from "@lib/data/products"
+import {
+  getProductByHandle,
+  buildProductMetadata,
+  buildProductSchemas,
+} from "@lib/product"
 import ProductTemplate from "@modules/products/templates"
 import { HttpTypes } from "@medusajs/types"
+import type { Metadata } from "next"
 
-// ISR：商品頁每 60 秒重新驗證一次，後台更新價格/內容 60 秒內生效
 export const revalidate = 60
 
 type Props = {
@@ -74,61 +78,48 @@ function getImagesForVariant(
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params
-  const { handle } = params
-  const region = await getRegion(params.countryCode)
-
-  if (!region) {
-    notFound()
-  }
-
-  const product = await listProducts({
-    countryCode: params.countryCode,
-    queryParams: { handle },
-  }).then(({ response }) => response.products[0])
+  const product = await getProductByHandle(params.countryCode, params.handle)
 
   if (!product) {
-    notFound()
+    return { title: "商品不存在 | 唐宋珠寶" }
   }
 
-  return {
-    title: `${product.title} | Medusa Store`,
-    description: `${product.title}`,
-    openGraph: {
-      title: `${product.title} | Medusa Store`,
-      description: `${product.title}`,
-      images: product.thumbnail ? [product.thumbnail] : [],
-    },
-  }
+  return buildProductMetadata(product, params.handle)
 }
 
 export default async function ProductPage(props: Props) {
   const params = await props.params
-  const region = await getRegion(params.countryCode)
   const searchParams = await props.searchParams
-
   const selectedVariantId = searchParams.v_id
 
-  if (!region) {
+  const [product, region] = await Promise.all([
+    getProductByHandle(params.countryCode, params.handle),
+    getRegion(params.countryCode),
+  ])
+
+  if (!product || !region) {
     notFound()
   }
 
-  const pricedProduct = await listProducts({
-    countryCode: params.countryCode,
-    queryParams: { handle: params.handle },
-  }).then(({ response }) => response.products[0])
-
-  const images = getImagesForVariant(pricedProduct, selectedVariantId)
-
-  if (!pricedProduct) {
-    notFound()
-  }
+  const images = getImagesForVariant(product, selectedVariantId) ?? []
+  const schemaList = buildProductSchemas(product, params.handle)
 
   return (
-    <ProductTemplate
-      product={pricedProduct}
-      region={region}
-      countryCode={params.countryCode}
-      images={images ?? []}
-    />
+    <>
+      {schemaList.map((schemaItem, index) => (
+        <script
+          key={`product-schema-${index}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaItem) }}
+        />
+      ))}
+
+      <ProductTemplate
+        product={product}
+        region={region}
+        countryCode={params.countryCode}
+        images={images}
+      />
+    </>
   )
 }

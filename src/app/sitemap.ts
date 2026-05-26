@@ -111,6 +111,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entry("/contact", { priority: 0.8 }),
     entry("/purchase-process", { priority: 0.85 }),
     entry("/purchase-categories", { priority: 0.85 }),
+    entry("/blog", { priority: 0.8, changeFrequency: "daily" }),
     entry("/tools", { priority: 0.6 }),
     entry("/privacy", { priority: 0.3, changeFrequency: "yearly" }),
   ]
