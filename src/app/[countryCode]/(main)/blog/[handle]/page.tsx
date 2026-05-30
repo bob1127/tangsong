@@ -12,14 +12,26 @@ import {
   buildArticleContentWithToc,
   type MedusaArticle,
 } from "@lib/blog"
+import { PRIMARY_COUNTRY_CODE } from "@lib/util/site-url"
 
 export const revalidate = 60
+
+/** 允許 build 時未產生的 handle 在 runtime 動態渲染 */
+export const dynamicParams = true
 
 type PageParams = Promise<{ countryCode: string; handle: string }>
 
 export async function generateStaticParams() {
-  const articles = await getPublishedArticles()
-  return articles.map((article) => ({ handle: article.handle }))
+  try {
+    const articles = await getPublishedArticles()
+    return articles.map((article) => ({
+      countryCode: PRIMARY_COUNTRY_CODE,
+      handle: article.handle,
+    }))
+  } catch (error) {
+    console.error("[blog/generateStaticParams] 失敗:", error)
+    return []
+  }
 }
 
 export async function generateMetadata({
@@ -72,7 +84,9 @@ export default async function BlogPostPage({
 
   const schemaList = buildArticleSchemas(article, handle)
   const authorName = getAuthorNameFromSchemas(schemaList)
-  const { html: cleanContent, toc } = buildArticleContentWithToc(article.content)
+  const { html: cleanContent, toc } = buildArticleContentWithToc(
+    article.content ?? ""
+  )
   const { prevArticle, nextArticle, relatedArticles } = getAdjacentArticles(
     allArticles,
     article.id

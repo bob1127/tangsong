@@ -160,19 +160,28 @@ function enrichSchemaNode(
 }
 
 function extractGraphFromMedusa(article: MedusaArticle): Record<string, unknown>[] {
-  const raw = (article.schema_data || article.faq_schema) as
-    | Record<string, unknown>
-    | null
-    | undefined
+  let raw = (article.schema_data || article.faq_schema) as unknown
 
   if (!raw) return []
 
-  if (Array.isArray(raw["@graph"])) {
-    return raw["@graph"] as Record<string, unknown>[]
+  if (typeof raw === "string") {
+    try {
+      raw = JSON.parse(raw) as Record<string, unknown>
+    } catch {
+      return []
+    }
   }
 
-  if (raw["@type"]) {
-    return [raw]
+  if (typeof raw !== "object" || raw === null) return []
+
+  const obj = raw as Record<string, unknown>
+
+  if (Array.isArray(obj["@graph"])) {
+    return obj["@graph"] as Record<string, unknown>[]
+  }
+
+  if (obj["@type"]) {
+    return [obj]
   }
 
   return []
