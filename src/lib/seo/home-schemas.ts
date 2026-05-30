@@ -1,5 +1,11 @@
 import { HttpTypes } from "@medusajs/types"
 import { absolutePublicUrl, SITE_URL } from "@lib/util/site-url"
+import {
+  buildStorePriceOffers,
+  deriveMetalDisplayPrices,
+  getPriceValidUntil,
+} from "@lib/metals/derive-prices"
+import type { MetalsData } from "@lib/metals/types"
 import { PRIMARY_SITE_LINKS, siteNavAbsoluteUrl } from "./site-navigation"
 
 const SCHEMA_CONTEXT = "https://schema.org"
@@ -7,6 +13,7 @@ const ORG_ID = `${SITE_URL}/#organization`
 const WEBSITE_ID = `${SITE_URL}/#website`
 const STORE_ID = `${SITE_URL}/#store`
 const WEBPAGE_ID = `${SITE_URL}/#webpage`
+const METAL_OFFER_CATALOG_ID = `${SITE_URL}/#metal-offer-catalog`
 
 const organizationSchema = {
   "@type": "Organization",
@@ -301,18 +308,99 @@ export const homeFaqSchema = {
   ],
 }
 
-export function buildHomeCoreSchemaGraph() {
+function buildMetalOfferCatalogSchema(metals: MetalsData) {
+  const prices = deriveMetalDisplayPrices(metals)
+  if (!prices) return null
+
+  const offers = buildStorePriceOffers(prices)
+  if (offers.length === 0) return null
+
+  const priceValidUntil = getPriceValidUntil(prices.updateTime)
+  const updatedLabel = new Date(prices.updateTime).toLocaleString("zh-TW")
+
+  return {
+    "@type": "OfferCatalog",
+    "@id": METAL_OFFER_CATALOG_ID,
+    name: "唐宋珠寶今日金價與回收價格",
+    description: `唐宋珠寶實體門市牌告價，資料更新時間：${updatedLabel}。價格單位為新台幣/台錢，實際交易依現場報價為準。`,
+    url: SITE_URL,
+    itemListElement: offers.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      item: {
+        "@type": "Offer",
+        name: item.name,
+        itemOffered: {
+          "@type": "Service",
+          name: item.name,
+          provider: { "@id": STORE_ID },
+          areaServed: {
+            "@type": "City",
+            name: "台北市",
+          },
+        },
+        price: String(item.price),
+        priceCurrency: "TWD",
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
+          price: String(item.price),
+          priceCurrency: "TWD",
+          unitText: item.unitText,
+          referenceQuantity: {
+            "@type": "QuantitativeValue",
+            value: 1,
+            unitText: item.unitText,
+          },
+        },
+        priceValidUntil,
+        availability: "https://schema.org/InStock",
+        url: SITE_URL,
+        seller: { "@id": STORE_ID },
+      },
+    })),
+  }
+}
+
+function buildStoreSchemaWithMetals(metals: MetalsData | null | undefined) {
+  const metalCatalog = metals ? buildMetalOfferCatalogSchema(metals) : null
+  if (!metalCatalog) return storeSchema
+
+  return {
+    ...storeSchema,
+    hasOfferCatalog: { "@id": METAL_OFFER_CATALOG_ID },
+  }
+}
+
+function buildHomeWebPageSchema(metals: MetalsData | null | undefined) {
+  const updateTime =
+    metals?.fetch_timestamp ?? metals?.updated_at ?? undefined
+
+  return {
+    ...homeWebPageSchema,
+    ...(updateTime && { dateModified: updateTime }),
+  }
+}
+
+export function buildHomeCoreSchemaGraph(metals?: MetalsData | null) {
+  const metalCatalog = metals ? buildMetalOfferCatalogSchema(metals) : null
+
+  const graph: Record<string, unknown>[] = [
+    organizationSchema,
+    websiteSchema,
+    buildStoreSchemaWithMetals(metals),
+    buildHomeWebPageSchema(metals),
+    buildMainPagesItemListSchema(),
+    ...buildSiteNavigationSchemas(),
+    homeFaqSchema,
+  ]
+
+  if (metalCatalog) {
+    graph.push(metalCatalog)
+  }
+
   return {
     "@context": SCHEMA_CONTEXT,
-    "@graph": [
-      organizationSchema,
-      websiteSchema,
-      storeSchema,
-      homeWebPageSchema,
-      buildMainPagesItemListSchema(),
-      ...buildSiteNavigationSchemas(),
-      homeFaqSchema,
-    ],
+    "@graph": graph,
   }
 }
 

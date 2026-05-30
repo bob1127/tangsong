@@ -1,51 +1,14 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import * as THREE from "three"
 import gsap from "gsap"
-// @ts-ignore: 忽略型別檢查
-import { SplitText } from "gsap/SplitText"
+import {
+  DEFAULT_HERO_CAROUSEL_SLIDES,
+  fetchHeroCarouselSlidesClient,
+} from "@lib/data/hero-carousel"
 
-// ====== 1. 簡化資料型別 (改為單圖結構) ======
-export interface SlideData {
-  description: string
-  type: string
-  field: string
-  date: string
-  image: string // 將 left/right 合併為單一 image
-}
-
-// ====== 2. 重構圖片與文案設定 (展開為 4 個獨立物件) ======
-export const slides: SlideData[] = [
-  {
-    description: "傳承百年的工藝精神，將靜謐的力量凝聚於此。",
-    type: "Collection",
-    field: "High Jewelry",
-    date: "2026",
-    image: "/images/0001.jpg",
-  },
-  {
-    description: "黃金收購與貴金屬珠寶，展現極致品味。",
-    type: "Collection",
-    field: "High Jewelry",
-    date: "2026",
-    image: "/images/0002.jpg",
-  },
-  {
-    description: "永恆的優雅，凝聚於方寸之間。",
-    type: "Editorial",
-    field: "Conceptual",
-    date: "2026",
-    image: "/images/0004.jpg",
-  },
-  {
-    description: "唐宋珠寶，為您的高雅氣質加冕。",
-    type: "Editorial",
-    field: "Conceptual",
-    date: "2026",
-    image: "/images/004.jpg",
-  },
-]
+export const slides = [...DEFAULT_HERO_CAROUSEL_SLIDES]
 
 // ====== 3. WebGL 著色器 (加入 uIsMobile 判斷) ======
 export const vertexShader: string = `
@@ -166,116 +129,208 @@ export const fragmentShader: string = `
     float finalMask = max(mask, 1.0 - distortion.inside);
     vec4 color = mix(newImg, currentImg, finalMask);
     
-    // 桌機版畫出中間白線，手機版則隱藏
-    float line = smoothstep(0.499, 0.5, vUv.x) - smoothstep(0.5, 0.501, vUv.x);
-    float lineAlpha = (1.0 - step(0.5, uIsMobile)) * 0.15;
-    color.rgb = mix(color.rgb, vec3(1.0), line * lineAlpha);
-    
     gl_FragColor = color;
   }
 `
 
 // ====== 4. 主元件 ======
-const Slider = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+type SliderProps = {
+  slides?: string[]
+}
+
+const Slider = ({ slides: slidesProp }: SliderProps) => {
   const sliderRef = useRef<HTMLDivElement>(null)
+  const initialSlidesKey = (
+    slidesProp?.length ? slidesProp : DEFAULT_HERO_CAROUSEL_SLIDES
+  ).join("|")
+  const [resolvedSlides, setResolvedSlides] = useState<string[]>(() =>
+    slidesProp?.length ? slidesProp : [...DEFAULT_HERO_CAROUSEL_SLIDES]
+  )
+  const slidesKey = resolvedSlides.join("|")
 
   useEffect(() => {
-    gsap.registerPlugin(SplitText)
+    let cancelled = false
+
+    fetchHeroCarouselSlidesClient().then((fetched) => {
+      if (cancelled) return
+      const nextKey = fetched.join("|")
+      if (nextKey !== initialSlidesKey) {
+        setResolvedSlides(fetched)
+      }
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [initialSlidesKey])
+
+  useEffect(() => {
+    const slideImages = resolvedSlides
     gsap.config({ nullTargetWarn: false })
 
-    let currentSlideIndex: number = 0
-    let isTransitioning: boolean = false
+    const container = sliderRef.current
+    if (!container) return
+
+    // 每次 effect 建立新 canvas，避免 Strict Mode dispose 後 context 失效
+    const canvas = document.createElement("canvas")
+    canvas.className = "absolute inset-0 z-0 block h-full w-full"
+    container.insertBefore(canvas, container.firstChild)
+
+    let active = true
+    let currentSlideIndex = 0
+    let isTransitioning = false
     let loadedTextures: THREE.Texture[] = []
-    let shaderMaterial: THREE.ShaderMaterial
-    let renderer: THREE.WebGLRenderer
+    let shaderMaterial: THREE.ShaderMaterial | null = null
+    let renderer: THREE.WebGLRenderer | null = null
     let isMobile = window.innerWidth < 768
+    let autoPlayTimer: ReturnType<typeof setInterval> | null = null
+    let animationFrameId: number | null = null
 
-    const createLineElements = (element: Element) => {
-      new SplitText(element, { type: "lines", linesClass: "line" })
-      element.querySelectorAll(".line").forEach((line) => {
-        line.innerHTML = `<span>${line.textContent}</span>`
-      })
-    }
-
-    const processTextElements = (container: Element) => {
-      container
-        .querySelectorAll(".slide-description p.animated-text")
-        .forEach(createLineElements)
-    }
-
-    const createSlideElement = (slideData: SlideData): HTMLDivElement => {
-      const content = document.createElement("div")
-      content.className =
-        "slider-content absolute bottom-12 left-0 right-0 z-10 flex flex-col items-center pointer-events-none text-white drop-shadow-lg"
-      content.style.opacity = "0"
-
-      content.innerHTML = `
-        <div class="slide-description text-center max-w-lg px-4">
-          
-        </div>
-      `
-      return content
-    }
-
-    const animateSlideTransition = (nextContentIndex: number) => {
-      const currentContent = document.querySelector(".slider-content")
-      const slider = sliderRef.current
-      if (!currentContent || !slider) return
-
-      const timeline = gsap.timeline()
-      const currentLines = Array.from(
-        currentContent.querySelectorAll(".line span")
-      )
-
-      timeline
-        .to(currentLines, {
-          y: "-100%",
-          duration: 0.6,
-          stagger: 0.025,
-          ease: "power2.inOut",
-        })
-        .call(
-          () => {
-            const newContent = createSlideElement(slides[nextContentIndex])
-            timeline.kill()
-            currentContent.remove()
-            slider.appendChild(newContent)
-
-            gsap.set(newContent.querySelectorAll("span"), { y: "100%" })
-
-            setTimeout(() => {
-              processTextElements(newContent)
-              const newLines = Array.from(
-                newContent.querySelectorAll(".line span")
-              )
-              gsap.set(newLines, { y: "100%" })
-              gsap.set(newContent, { opacity: 1 })
-              gsap.to(newLines, {
-                y: "0%",
-                duration: 0.5,
-                stagger: 0.1,
-                ease: "power2.inOut",
-                delay: 0.1,
-              })
-            }, 100)
+    const loadTexture = (
+      loader: THREE.TextureLoader,
+      url: string
+    ): Promise<THREE.Texture> =>
+      new Promise((resolve, reject) => {
+        loader.setCrossOrigin("anonymous")
+        loader.load(
+          url,
+          (texture) => {
+            texture.minFilter = THREE.LinearFilter
+            texture.magFilter = THREE.LinearFilter
+            const img = texture.image as HTMLImageElement
+            texture.userData = {
+              size: new THREE.Vector2(
+                img.naturalWidth || 1,
+                img.naturalHeight || 1
+              ),
+            }
+            resolve(texture)
           },
           undefined,
-          0.3
+          (error) => reject(new Error(`無法載入輪播圖 ${url}: ${error}`))
         )
+      })
+
+    const handleSlideChange = () => {
+      if (
+        !active ||
+        isTransitioning ||
+        !shaderMaterial ||
+        loadedTextures.length === 0
+      ) {
+        return
+      }
+
+      const material = shaderMaterial
+      isTransitioning = true
+      isMobile = window.innerWidth < 768
+
+      const maxSlides = isMobile
+        ? loadedTextures.length
+        : Math.ceil(loadedTextures.length / 2)
+      const nextIndex = (currentSlideIndex + 1) % maxSlides
+
+      if (isMobile) {
+        material.uniforms.uTexLeft1.value = loadedTextures[currentSlideIndex]
+        material.uniforms.uTexLeft2.value = loadedTextures[nextIndex]
+        material.uniforms.uTexLeft1Size.value =
+          loadedTextures[currentSlideIndex].userData.size
+        material.uniforms.uTexLeft2Size.value =
+          loadedTextures[nextIndex].userData.size
+      } else {
+        const currL = currentSlideIndex * 2
+        const nextL = nextIndex * 2
+        material.uniforms.uTexLeft1.value = loadedTextures[currL]
+        material.uniforms.uTexLeft2.value = loadedTextures[nextL]
+        material.uniforms.uTexRight1.value = loadedTextures[currL + 1]
+        material.uniforms.uTexRight2.value = loadedTextures[nextL + 1]
+        material.uniforms.uTexLeft1Size.value =
+          loadedTextures[currL].userData.size
+        material.uniforms.uTexLeft2Size.value =
+          loadedTextures[nextL].userData.size
+        material.uniforms.uTexRight1Size.value =
+          loadedTextures[currL + 1].userData.size
+        material.uniforms.uTexRight2Size.value =
+          loadedTextures[nextL + 1].userData.size
+      }
+
+      gsap.fromTo(
+        material.uniforms.uProgress,
+        { value: 0 },
+        {
+          value: 1,
+          duration: 2.5,
+          ease: "power2.inOut",
+          onComplete: () => {
+            if (!active) return
+            material.uniforms.uProgress.value = 0
+            currentSlideIndex = nextIndex
+            isTransitioning = false
+
+            if (isMobile) {
+              material.uniforms.uTexLeft1.value = loadedTextures[nextIndex]
+              material.uniforms.uTexLeft1Size.value =
+                loadedTextures[nextIndex].userData.size
+            } else {
+              material.uniforms.uTexLeft1.value = loadedTextures[nextIndex * 2]
+              material.uniforms.uTexRight1.value =
+                loadedTextures[nextIndex * 2 + 1]
+              material.uniforms.uTexLeft1Size.value =
+                loadedTextures[nextIndex * 2].userData.size
+              material.uniforms.uTexRight1Size.value =
+                loadedTextures[nextIndex * 2 + 1].userData.size
+            }
+          },
+        }
+      )
+    }
+
+    const handleResize = () => {
+      if (
+        !active ||
+        !renderer ||
+        !shaderMaterial ||
+        loadedTextures.length === 0
+      ) {
+        return
+      }
+
+      renderer.setSize(window.innerWidth, window.innerHeight)
+      shaderMaterial.uniforms.uResolution.value.set(
+        window.innerWidth,
+        window.innerHeight
+      )
+
+      const newIsMobile = window.innerWidth < 768
+      if (newIsMobile !== isMobile) {
+        isMobile = newIsMobile
+        shaderMaterial.uniforms.uIsMobile.value = isMobile ? 1.0 : 0.0
+        currentSlideIndex = 0
+        shaderMaterial.uniforms.uTexLeft1.value = loadedTextures[0]
+        shaderMaterial.uniforms.uTexLeft1Size.value =
+          loadedTextures[0].userData.size
+        if (!isMobile && loadedTextures[1]) {
+          shaderMaterial.uniforms.uTexRight1.value = loadedTextures[1]
+          shaderMaterial.uniforms.uTexRight1Size.value =
+            loadedTextures[1].userData.size
+        }
+      }
+    }
+
+    const startAutoPlay = () => {
+      if (autoPlayTimer) clearInterval(autoPlayTimer)
+      autoPlayTimer = setInterval(() => handleSlideChange(), 6000)
     }
 
     const initializeRenderer = async () => {
-      if (!canvasRef.current) return
+      if (!active) return
 
       const scene = new THREE.Scene()
       const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
 
-      renderer = new THREE.WebGLRenderer({
-        canvas: canvasRef.current,
-        antialias: true,
-      })
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
       renderer.setSize(window.innerWidth, window.innerHeight)
+      renderer.toneMapping = THREE.NoToneMapping
 
       shaderMaterial = new THREE.ShaderMaterial({
         uniforms: {
@@ -295,187 +350,79 @@ const Slider = () => {
         },
         vertexShader,
         fragmentShader,
+        toneMapped: false,
       })
 
       scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), shaderMaterial))
       const loader = new THREE.TextureLoader()
 
-      // 載入所有圖片
-      for (const slide of slides) {
-        const tex = await new Promise<THREE.Texture>((resolve) =>
-          loader.load(slide.image, resolve)
-        )
-        tex.minFilter = tex.magFilter = THREE.LinearFilter
-        const img = tex.image as any
-        tex.userData = {
-          size: new THREE.Vector2(img.width || 1, img.height || 1),
+      for (const image of slideImages) {
+        const tex = await loadTexture(loader, image)
+        if (!active) {
+          tex.dispose()
+          return
         }
         loadedTextures.push(tex)
       }
 
-      // 初始賦值
+      if (!shaderMaterial || loadedTextures.length === 0) return
+
       shaderMaterial.uniforms.uTexLeft1.value = loadedTextures[0]
       shaderMaterial.uniforms.uTexLeft1Size.value =
         loadedTextures[0].userData.size
-      if (!isMobile) {
+      if (!isMobile && loadedTextures[1]) {
         shaderMaterial.uniforms.uTexRight1.value = loadedTextures[1]
         shaderMaterial.uniforms.uTexRight1Size.value =
           loadedTextures[1].userData.size
       }
 
       const render = () => {
-        requestAnimationFrame(render)
+        if (!active || !renderer) return
+        animationFrameId = requestAnimationFrame(render)
         renderer.render(scene, camera)
       }
       render()
 
-      // 初次載入文字動畫
-      const initialContent = createSlideElement(slides[0])
-      sliderRef.current?.appendChild(initialContent)
-      processTextElements(initialContent)
-      gsap.to(initialContent, { opacity: 1, duration: 0.1 })
-      const lines = Array.from(initialContent.querySelectorAll(".line span"))
-      gsap.fromTo(
-        lines,
-        { y: "100%" },
-        {
-          y: "0%",
-          duration: 0.8,
-          stagger: 0.025,
-          ease: "power2.out",
-          delay: 0.2,
-        }
-      )
+      startAutoPlay()
     }
 
-    const handleSlideChange = () => {
-      if (isTransitioning) return
-      isTransitioning = true
-
-      isMobile = window.innerWidth < 768
-
-      // 計算最大輪播頁數：手機 4 頁，桌機 2 頁
-      const maxSlides = isMobile
-        ? loadedTextures.length
-        : Math.ceil(loadedTextures.length / 2)
-      const nextIndex = (currentSlideIndex + 1) % maxSlides
-
-      if (isMobile) {
-        shaderMaterial.uniforms.uTexLeft1.value =
-          loadedTextures[currentSlideIndex]
-        shaderMaterial.uniforms.uTexLeft2.value = loadedTextures[nextIndex]
-        shaderMaterial.uniforms.uTexLeft1Size.value =
-          loadedTextures[currentSlideIndex].userData.size
-        shaderMaterial.uniforms.uTexLeft2Size.value =
-          loadedTextures[nextIndex].userData.size
-      } else {
-        const currL = currentSlideIndex * 2,
-          nextL = nextIndex * 2
-        shaderMaterial.uniforms.uTexLeft1.value = loadedTextures[currL]
-        shaderMaterial.uniforms.uTexLeft2.value = loadedTextures[nextL]
-        shaderMaterial.uniforms.uTexRight1.value = loadedTextures[currL + 1]
-        shaderMaterial.uniforms.uTexRight2.value = loadedTextures[nextL + 1]
-
-        shaderMaterial.uniforms.uTexLeft1Size.value =
-          loadedTextures[currL].userData.size
-        shaderMaterial.uniforms.uTexLeft2Size.value =
-          loadedTextures[nextL].userData.size
-        shaderMaterial.uniforms.uTexRight1Size.value =
-          loadedTextures[currL + 1].userData.size
-        shaderMaterial.uniforms.uTexRight2Size.value =
-          loadedTextures[nextL + 1].userData.size
-      }
-
-      // 桌機會抓左邊那張圖的對應文字
-      const textDataIndex = isMobile ? nextIndex : nextIndex * 2
-      animateSlideTransition(textDataIndex)
-
-      gsap.fromTo(
-        shaderMaterial.uniforms.uProgress,
-        { value: 0 },
-        {
-          value: 1,
-          duration: 2.5,
-          ease: "power2.inOut",
-          onComplete: () => {
-            shaderMaterial.uniforms.uProgress.value = 0
-            currentSlideIndex = nextIndex
-            isTransitioning = false
-
-            // 將過渡完的下一張圖設定為目前的底圖
-            if (isMobile) {
-              shaderMaterial.uniforms.uTexLeft1.value =
-                loadedTextures[nextIndex]
-              shaderMaterial.uniforms.uTexLeft1Size.value =
-                loadedTextures[nextIndex].userData.size
-            } else {
-              shaderMaterial.uniforms.uTexLeft1.value =
-                loadedTextures[nextIndex * 2]
-              shaderMaterial.uniforms.uTexRight1.value =
-                loadedTextures[nextIndex * 2 + 1]
-
-              // 👇 就是漏了下面這兩行！桌機版也必須更新尺寸
-              shaderMaterial.uniforms.uTexLeft1Size.value =
-                loadedTextures[nextIndex * 2].userData.size
-              shaderMaterial.uniforms.uTexRight1Size.value =
-                loadedTextures[nextIndex * 2 + 1].userData.size
-            }
-          },
-        }
-      )
-    }
-
-    const handleResize = () => {
-      if (renderer) {
-        renderer.setSize(window.innerWidth, window.innerHeight)
-        shaderMaterial.uniforms.uResolution.value.set(
-          window.innerWidth,
-          window.innerHeight
-        )
-
-        // 螢幕改變時，重置陣列避免破圖
-        const newIsMobile = window.innerWidth < 768
-        if (newIsMobile !== isMobile) {
-          isMobile = newIsMobile
-          shaderMaterial.uniforms.uIsMobile.value = isMobile ? 1.0 : 0.0
-          currentSlideIndex = 0
-          shaderMaterial.uniforms.uTexLeft1.value = loadedTextures[0]
-          if (!isMobile)
-            shaderMaterial.uniforms.uTexRight1.value = loadedTextures[1]
-        }
-      }
-    }
-
-    // 啟動與綁定事件
-    initializeRenderer()
-    const autoPlayTimer = setInterval(() => handleSlideChange(), 6000)
-    const slider = sliderRef.current
-    if (slider) slider.addEventListener("click", handleSlideChange)
+    container.addEventListener("click", handleSlideChange)
     window.addEventListener("resize", handleResize)
 
+    initializeRenderer().catch((error) => {
+      console.error("[HeroCarousel] 初始化失敗:", error)
+    })
+
     return () => {
-      clearInterval(autoPlayTimer)
-      if (slider) slider.removeEventListener("click", handleSlideChange)
+      active = false
+      if (autoPlayTimer) clearInterval(autoPlayTimer)
+      if (animationFrameId) cancelAnimationFrame(animationFrameId)
+      container.removeEventListener("click", handleSlideChange)
       window.removeEventListener("resize", handleResize)
-      if (renderer) renderer.dispose()
+      loadedTextures.forEach((tex) => tex.dispose())
+      loadedTextures = []
+      if (renderer) {
+        renderer.dispose()
+        renderer = null
+      }
+      canvas.remove()
     }
-  }, [])
+  }, [slidesKey])
 
   return (
     <div
-      className="slider h-screen w-full relative overflow-hidden"
+      className="slider h-screen w-full relative overflow-hidden cursor-pointer"
       ref={sliderRef}
+      aria-label="首頁輪播，點擊可切換下一張"
     >
-      <canvas ref={canvasRef} className="absolute inset-0 z-0" />
-
       {/* ===== 絕對置中且固定的品牌標題區 ===== */}
       <div className="absolute inset-0 z-20 flex flex-col justify-center items-center pointer-events-none text-white drop-shadow-2xl">
         <h1 className="text-5xl md:text-7xl font-serif tracking-[0.2em] mb-4">
           唐宋珠寶
         </h1>
-        <h2 className="text-base md:text-xl font-normal tracking-[0.15em] opacity-90">
+        <p className="text-base md:text-xl font-light tracking-[0.15em] opacity-90">
           專業檢測與透明報價，安心回收每一份價值
-        </h2>
+        </p>
       </div>
     </div>
   )

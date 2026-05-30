@@ -1,83 +1,80 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
+import { deriveMetalDisplayPrices } from "@lib/metals/derive-prices"
+import type { MetalsData } from "@lib/metals/types"
 import TradingViewChart from "./TradingViewChart"
 
-interface MetalsData {
-  updated_at?: string
-  fetch_timestamp?: string
-  exchange_rate_usd_twd: number
-  gold_price_qian?: number
-  platinum_price_qian?: number
-  silver_price_qian?: number
-  palladium_price_qian?: number
-  base_gold_twd_qian?: number
-  base_platinum_twd_qian?: number
-  base_silver_twd_qian?: number
-  base_palladium_twd_qian?: number
-  gold_sell?: number
-  gold_buy?: number
-  k18_buy?: number
-  k14_buy?: number
-  pt950_sell?: number
-  pt950_buy?: number
-  pd_sell?: number
-  pd_buy?: number
+type DetailedPriceTableProps = {
+  initialData?: MetalsData | null
 }
 
-export default function DetailedPriceTable() {
-  const [data, setData] = useState<MetalsData | null>(null)
-  const [loading, setLoading] = useState(true)
+async function fetchLatestMetals(): Promise<MetalsData | null> {
+  const backendUrl =
+    process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
+  const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
+
+  const res = await fetch(
+    `${backendUrl}/store/metals?nocache=${Date.now()}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "x-publishable-api-key": apiKey,
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+      cache: "no-store",
+    }
+  )
+
+  if (!res.ok) throw new Error("API 請求失敗")
+
+  const contentType = res.headers.get("content-type")
+  if (!contentType?.includes("application/json")) {
+    throw new TypeError("回傳的格式不是 JSON，請確認 API 路徑是否正確")
+  }
+
+  const json = await res.json()
+  if (!json.success) throw new Error("回傳格式不符預期")
+
+  return Array.isArray(json.data) ? json.data[0] : json.data
+}
+
+export default function DetailedPriceTable({
+  initialData = null,
+}: DetailedPriceTableProps) {
+  const [data, setData] = useState<MetalsData | null>(initialData)
+  const [loading, setLoading] = useState(!initialData)
   const [error, setError] = useState(false)
   const [isChartOpen, setIsChartOpen] = useState(false)
 
   useEffect(() => {
-    const fetchPrice = async () => {
+    let cancelled = false
+
+    const refreshPrice = async () => {
       try {
         setError(false)
-        const backendUrl =
-          process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
-        const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
-
-        const targetUrl = `${backendUrl}/store/metals?nocache=${new Date().getTime()}`
-
-        const res = await fetch(targetUrl, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "x-publishable-api-key": apiKey,
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            Pragma: "no-cache",
-            Expires: "0",
-          },
-          cache: "no-store",
-        })
-
-        if (!res.ok) {
-          throw new Error("API 請求失敗")
+        const latest = await fetchLatestMetals()
+        if (!cancelled && latest) {
+          setData(latest)
         }
-
-        const contentType = res.headers.get("content-type")
-        if (!contentType || !contentType.includes("application/json")) {
-          throw new TypeError("回傳的格式不是 JSON，請確認 API 路徑是否正確")
+      } catch (fetchError) {
+        console.error("無法取得金價:", fetchError)
+        if (!cancelled && !initialData) {
+          setError(true)
         }
-
-        const json = await res.json()
-        if (json.success) {
-          const latestData = Array.isArray(json.data) ? json.data[0] : json.data
-          setData(latestData)
-        } else {
-          throw new Error("回傳格式不符預期")
-        }
-      } catch (error) {
-        console.error("無法取得金價:", error)
-        setError(true)
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
-    fetchPrice()
-  }, [])
+
+    refreshPrice()
+    return () => {
+      cancelled = true
+    }
+  }, [initialData])
 
   useEffect(() => {
     if (isChartOpen) {
@@ -98,41 +95,42 @@ export default function DetailedPriceTable() {
     )
   }
 
-  const rawGold = data?.base_gold_twd_qian ?? data?.gold_price_qian ?? 0
-  const rawPt = data?.base_platinum_twd_qian ?? data?.platinum_price_qian ?? 0
-  const rawAg = data?.base_silver_twd_qian ?? data?.silver_price_qian ?? 0
-  const rawPd = data?.base_palladium_twd_qian ?? data?.palladium_price_qian ?? 0
+  const prices = deriveMetalDisplayPrices(data)
+  if (!prices) {
+    return (
+      <div className="w-full max-w-[1400px] mx-auto mt-12 px-4 lg:px-8 mb-20">
+        <div className="w-full h-64 bg-[#3A0A0E]/40 rounded-xl mt-8 border border-[#D4AF37]/20 flex items-center justify-center text-[#FDF5E6]/70">
+          暫無法載入金價資料
+        </div>
+      </div>
+    )
+  }
 
-  const rate = data?.exchange_rate_usd_twd ?? 32.0
-  const updateTime =
-    data?.fetch_timestamp ?? data?.updated_at ?? new Date().toISOString()
+  const {
+    updateTime,
+    rate,
+    rawGold,
+    rawPt,
+    rawAg,
+    rawPd,
+    storeGoldSell,
+    storeGoldBuy,
+    storeGoldBullionBuy,
+    store18kBuy,
+    store14kBuy,
+    storeSilverBuy,
+    storePtBuy,
+    storePdBuy,
+    intlGoldBuy,
+    intlGoldSell,
+    intlPtBuy,
+    intlPtSell,
+    intlAgBuy,
+    intlAgSell,
+    intlPdBuy,
+    intlPdSell,
+  } = prices
 
-  // 門市牌告價
-  const storeGoldSell = data?.gold_sell ?? (rawGold > 0 ? rawGold + 800 : 0)
-  const storeGoldBuy = data?.gold_buy ?? (rawGold > 0 ? rawGold - 200 : 0)
-
-  // 黃金條塊回收價與白銀回收價估算
-  const storeGoldBullionBuy = rawGold > 0 ? rawGold - 100 : 0
-  const storeSilverBuy = rawAg > 0 ? rawAg - 5 : 0
-
-  const store18kBuy =
-    data?.k18_buy ?? (storeGoldBuy > 0 ? Math.round(storeGoldBuy * 0.6) : 0)
-  const store14kBuy =
-    data?.k14_buy ?? (storeGoldBuy > 0 ? Math.round(storeGoldBuy * 0.45) : 0)
-  const storePtBuy = data?.pt950_buy ?? (rawPt > 0 ? rawPt - 500 : 0)
-  const storePdBuy = data?.pd_buy ?? (rawPd > 0 ? rawPd - 500 : 0)
-
-  // 國際現貨價
-  const intlGoldBuy = rawGold > 0 ? rawGold - 30 : 0
-  const intlGoldSell = rawGold > 0 ? rawGold + 30 : 0
-  const intlPtBuy = rawPt > 0 ? rawPt - 50 : 0
-  const intlPtSell = rawPt > 0 ? rawPt + 50 : 0
-  const intlAgBuy = rawAg > 0 ? rawAg - 0.5 : 0
-  const intlAgSell = rawAg > 0 ? rawAg + 0.5 : 0
-  const intlPdBuy = rawPd > 0 ? rawPd - 50 : 0
-  const intlPdSell = rawPd > 0 ? rawPd + 50 : 0
-
-  // 價格格式化
   const formatPrice = (price: number) => {
     if (price <= 0) return "—"
     return price.toLocaleString()
@@ -183,7 +181,10 @@ export default function DetailedPriceTable() {
         </div>
       )}
 
-      <div className="w-full max-w-[1400px] mx-auto mt-12 px-4 lg:px-8 mb-20 font-mono">
+      <div
+        id="metal-prices"
+        className="w-full max-w-[1400px] mx-auto mt-12 px-4 lg:px-8 mb-20 font-mono"
+      >
         {/* 頭部資訊區 */}
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-4 border-b border-[#D4AF37]/40 pb-3 gap-4 md:gap-0">
           <div>
@@ -323,7 +324,6 @@ export default function DetailedPriceTable() {
                     </tr>
                   </thead>
                   <tbody>
-                    {/* 1. 黃金賣出牌價 (僅賣出價) */}
                     <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors">
                       <td className="py-4 px-4 text-[#FDF5E6] font-bold text-base tracking-widest">
                         黃金賣出牌價
@@ -337,7 +337,6 @@ export default function DetailedPriceTable() {
                       </td>
                     </tr>
 
-                    {/* 2. 黃金條塊回收價 */}
                     <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors bg-black/10">
                       <td className="py-4 px-4 text-[#F3E5AB]/90 font-bold text-base tracking-widest">
                         黃金條塊回收價
@@ -351,7 +350,6 @@ export default function DetailedPriceTable() {
                       </td>
                     </tr>
 
-                    {/* 3. 黃金飾金回收價 */}
                     <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors">
                       <td className="py-4 px-4 text-[#F3E5AB] font-bold text-base tracking-widest">
                         黃金飾金回收價
@@ -365,7 +363,6 @@ export default function DetailedPriceTable() {
                       </td>
                     </tr>
 
-                    {/* 4. 18K 金回收價 */}
                     <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors bg-black/10">
                       <td className="py-3 px-4 text-[#F3E5AB]/90 font-bold text-base tracking-widest">
                         18K 金回收價
@@ -379,7 +376,6 @@ export default function DetailedPriceTable() {
                       </td>
                     </tr>
 
-                    {/* 5. 14K 金回收價 */}
                     <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors">
                       <td className="py-3 px-4 text-[#F3E5AB]/90 font-bold text-base tracking-widest">
                         14K 金回收價
@@ -393,7 +389,6 @@ export default function DetailedPriceTable() {
                       </td>
                     </tr>
 
-                    {/* 6. 白銀回收價 */}
                     <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors bg-black/10">
                       <td className="py-4 px-4 text-[#D1D5DB] font-bold text-base tracking-widest">
                         白銀回收價
@@ -407,7 +402,6 @@ export default function DetailedPriceTable() {
                       </td>
                     </tr>
 
-                    {/* 7. 白金 Pt950 回收價 */}
                     <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors">
                       <td className="py-4 px-4 text-[#E4E4E4] font-bold text-base tracking-widest">
                         白金 Pt950 回收價
@@ -421,7 +415,6 @@ export default function DetailedPriceTable() {
                       </td>
                     </tr>
 
-                    {/* 8. 鈀金 Pd 回收價 */}
                     <tr className="hover:bg-black/20 transition-colors bg-black/10">
                       <td className="py-4 px-4 text-[#C1B6A4] font-bold text-base tracking-widest">
                         鈀金 Pd 回收價

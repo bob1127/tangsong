@@ -1,6 +1,8 @@
 import Hero from "@modules/home/components/hero"
 import { getRegion } from "@lib/data/regions"
 import { listProducts } from "@lib/data/products"
+import { getLatestMetals } from "@lib/data/metals"
+import { getHeroCarouselSlides } from "@lib/data/hero-carousel"
 import {
   buildHomeMetadata,
   buildHomeCoreSchemaGraph,
@@ -17,7 +19,11 @@ export default async function Home(props: {
   const params = await props.params
   const { countryCode } = params
 
-  const region = await getRegion(countryCode)
+  const [region, metalsData, heroSlides] = await Promise.all([
+    getRegion(countryCode),
+    getLatestMetals(),
+    getHeroCarouselSlides({ preferLocal: process.env.NODE_ENV === "development" }),
+  ])
 
   if (!region) {
     return (
@@ -47,7 +53,7 @@ export default async function Home(props: {
     regionId: region.id,
   })
 
-  const coreGraph = buildHomeCoreSchemaGraph()
+  const coreGraph = buildHomeCoreSchemaGraph(metalsData)
   const productListSchema = buildProductListSchema(products, countryCode)
 
   return (
@@ -62,7 +68,7 @@ export default async function Home(props: {
           __html: JSON.stringify(productListSchema),
         }}
       />
-      <Hero />
+      <Hero initialMetalsData={metalsData} heroSlides={heroSlides} />
     </>
   )
 }

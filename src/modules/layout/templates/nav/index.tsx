@@ -3,22 +3,26 @@ import { listRegions } from "@lib/data/regions"
 import { listLocales } from "@lib/data/locales"
 import { getLocale } from "@lib/data/locale-actions"
 import { retrieveCustomer } from "@lib/data/customer"
+import { getLatestMetals } from "@lib/data/metals"
 import { StoreRegion } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
 import SideMenu from "@modules/layout/components/side-menu"
+import TopNavPriceTicker from "@modules/layout/components/top-nav-price-ticker"
 import Image from "next/image"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
 
 export default async function Nav() {
-  const [regions, locales, currentLocale, customer] = await Promise.all([
-    listRegions().then((regions: StoreRegion[]) => regions),
-    listLocales(),
-    getLocale(),
-    retrieveCustomer().catch(() => null),
-  ])
+  const [regions, locales, currentLocale, customer, metalsData] =
+    await Promise.all([
+      listRegions().then((regions: StoreRegion[]) => regions),
+      listLocales(),
+      getLocale(),
+      retrieveCustomer().catch(() => null),
+      getLatestMetals(),
+    ])
 
   // 🚀 從 metadata 提取 LINE 傳過來的大頭貼
   const avatarUrl = customer?.metadata?.avatar_url as string | undefined
@@ -32,11 +36,7 @@ export default async function Nav() {
 
   return (
     <div className="sticky top-0 inset-x-0 z-50 group">
-      <div className="topNav w-full py-2 bg-[#3A0A0E] flex justify-center items-center border-b border-[#D4AF37]/30">
-        <span className="text-xs tracking-[0.2em] text-[#D4AF37]">
-          今日國際金價已更新，歡迎線上預約門市鑑賞
-        </span>
-      </div>
+      <TopNavPriceTicker initialData={metalsData} />
 
       <header className="relative h-16 mx-auto border-b duration-200 bg-[#FDFBF7] border-[#D4AF37]/20  shadow-sm">
         <nav className="  txt-xsmall-plus max-w-[1920px]  mx-auto flex items-center justify-between w-full h-full text-small-regular">
