@@ -1,120 +1,54 @@
 "use client"
 
+import Link from "next/link"
 import { useState } from "react"
-
-const faqs = [
-  {
-    q: "黃金回收怎麼計價？",
-    a: "黃金回收價格主要依照「當日國際金價」、「黃金純度」以及「重量」計算。不同純度的黃金，例如9999純金、22K、18K，回收價格也會不同，實際價格會依當日行情透明報價。",
-  },
-  {
-    q: "K金可以回收嗎？",
-    a: "可以。18K金、14K金、白K金、玫瑰金等皆可回收，回收時會依照含金量與重量進行專業檢測與估價。",
-  },
-  {
-    q: "黃金回收需要證件嗎？",
-    a: "需要。依照政府法規，黃金回收需出示身分證件，以保障交易安全與合法性。",
-  },
-  {
-    q: "今日金價如何查詢？",
-    a: "可透過國際黃金行情、市場牌價或銀樓公告查詢今日金價。實際回收價格仍會依照黃金純度與重量計算。",
-  },
-  {
-    q: "黃金回收會扣耗損嗎？",
-    a: "部分黃金回收會依商品狀況、純度與加工方式評估是否有耗損，但專業銀樓通常會透明說明計價方式與秤重過程。",
-  },
-  {
-    q: "舊金飾可以回收嗎？",
-    a: "可以。舊金飾、斷裂項鍊、單耳耳環、變形戒指等皆可回收，不影響黃金本身價值。",
-  },
-  {
-    q: "黃金回收是看品牌嗎？",
-    a: "一般黃金回收主要依照黃金重量與純度計算，品牌並非主要影響因素，但部分精品品牌珠寶可能另有收藏價值。",
-  },
-  {
-    q: "白金與鉑金有差別嗎？",
-    a: "有。台灣常見「白金」多為白K金，而「鉑金」則是 Platinum，材質與價值不同，回收價格也不同。",
-  },
-  {
-    q: "鑽石可以回收嗎？",
-    a: "可以。鑽石回收價格會依照大小、顏色、淨度、車工等條件評估，若有GIA證書通常更有利估價。",
-  },
-  {
-    q: "黃金回收價格每天都一樣嗎？",
-    a: "不一定。黃金價格會隨國際金價波動，因此每日回收價格皆可能不同。",
-  },
-  {
-    q: "黃金一錢等於幾克？",
-    a: "台灣黃金計算常用「錢」為單位，1錢約等於3.75公克。",
-  },
-  {
-    q: "K金與純金有什麼不同？",
-    a: "純金含金量較高，質地較軟；K金則加入其他金屬提升硬度，因此常用於珠寶設計與日常配戴。",
-  },
-  {
-    q: "沒有保單的黃金可以回收嗎？",
-    a: "可以。即使沒有購買保單或保證書，多數黃金仍可透過專業儀器檢測後進行回收估價。",
-  },
-  {
-    q: "黃金回收多久可以拿到現金？",
-    a: "一般現場完成檢測與確認價格後，即可快速完成交易並取得現金。",
-  },
-  {
-    q: "黃金回收需要預約嗎？",
-    a: "通常不需要。大部分銀樓皆可現場估價，但若回收數量較多，建議提前聯繫安排。",
-  },
-  {
-    q: "名錶也可以回收嗎？",
-    a: "可以。勞力士、OMEGA、Cartier 等精品名錶皆有回收市場，實際價格會依品牌、型號與狀況評估。",
-  },
-  {
-    q: "黃金回收會不會被偷斤減兩？",
-    a: "建議選擇具有透明秤重、公開金價與專業檢測設備的合法銀樓，能有效保障交易安心與公平。",
-  },
-  {
-    q: "K金回收價格怎麼算？",
-    a: "K金回收會依照K數含金量計算，例如18K約含75%黃金，因此回收價格通常低於純金。",
-  },
-  {
-    q: "黃金變黑還能回收嗎？",
-    a: "可以。黃金氧化、變色或外觀老舊通常不影響黃金本身價值，仍可正常回收。",
-  },
-  {
-    q: "哪些東西可以做黃金回收？",
-    a: "常見可回收項目包括：金戒指、金項鍊、金手鐲、K金飾品、白金飾品、黃金條塊、金幣、舊金飾、壞掉珠寶，以及部分精品名錶與鑽石珠寶，皆可由專業銀樓進行估價與回收。",
-  },
-]
+import { GOLD_FAQ_ITEMS } from "@lib/data/gold-faqs"
 
 const INITIAL_VISIBLE = 10
 
-export default function GoldFAQ() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null)
-  const [showAll, setShowAll] = useState(false)
+type GoldFAQProps = {
+  /** 獨立 Q&A 頁：預設展開全部 */
+  showAllByDefault?: boolean
+  /** 首頁區塊：顯示「查看全部 Q&A」連結 */
+  showViewAllLink?: boolean
+  /** 獨立頁面已有主標題時隱藏區塊標題 */
+  hideHeader?: boolean
+}
 
-  const visibleFaqs = showAll ? faqs : faqs.slice(0, INITIAL_VISIBLE)
+export default function GoldFAQ({
+  showAllByDefault = false,
+  showViewAllLink = false,
+  hideHeader = false,
+}: GoldFAQProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const [showAll, setShowAll] = useState(showAllByDefault)
+
+  const visibleFaqs = showAll
+    ? GOLD_FAQ_ITEMS
+    : GOLD_FAQ_ITEMS.slice(0, INITIAL_VISIBLE)
 
   const toggle = (i: number) => setOpenIndex(openIndex === i ? null : i)
 
   return (
     <section className="w-full bg-white py-20 px-4">
       <div className="max-w-3xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <p className="text-xs tracking-[0.3em] text-[#b8973a] uppercase mb-3">
-            FAQ
-          </p>
-          <h2 className="text-2xl md:text-3xl font-light text-stone-800 tracking-wide">
-            黃金回收常見問題
-          </h2>
-          <div className="mt-4 mx-auto w-10 h-px bg-[#b8973a]/60" />
-        </div>
+        {!hideHeader ? (
+          <div className="text-center mb-12">
+            <p className="text-xs tracking-[0.3em] text-[#b8973a] uppercase mb-3">
+              FAQ
+            </p>
+            <h2 className="text-2xl md:text-3xl font-light text-stone-800 tracking-wide">
+              黃金回收常見問題
+            </h2>
+            <div className="mt-4 mx-auto w-10 h-px bg-[#b8973a]/60" />
+          </div>
+        ) : null}
 
-        {/* Accordion */}
         <div className="divide-y divide-stone-200">
           {visibleFaqs.map((faq, i) => {
             const isOpen = openIndex === i
             return (
-              <div key={i}>
+              <div key={faq.q}>
                 <button
                   onClick={() => toggle(i)}
                   className="w-full flex items-start justify-between gap-4 py-5 text-left group"
@@ -146,24 +80,22 @@ export default function GoldFAQ() {
                   </span>
                 </button>
 
-                {/* Answer */}
                 <div
                   className={`overflow-hidden transition-all duration-300 ease-in-out ${
                     isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
                   }`}
                 >
-                  <p className="pb-6 pl-9 text-stone-500 text-sm leading-relaxed font-light">
+                  <div className="pb-6 pl-9 text-stone-500 text-sm leading-relaxed font-light">
                     {faq.a}
-                  </p>
+                  </div>
                 </div>
               </div>
             )
           })}
         </div>
 
-        {/* Load More */}
-        {!showAll && (
-          <div className="mt-10 text-center">
+        {!showAllByDefault && !showAll && (
+          <div className="mt-10 text-center flex flex-col items-center gap-4">
             <button
               onClick={() => setShowAll(true)}
               className="inline-flex items-center gap-2 px-8 py-3 border border-[#b8973a]/50 text-[#b8973a] text-sm tracking-widest uppercase hover:bg-[#b8973a]/5 hover:border-[#b8973a] transition-all duration-200"
@@ -184,13 +116,21 @@ export default function GoldFAQ() {
                 />
               </svg>
               <span className="text-stone-400 text-xs ml-1">
-                +{faqs.length - INITIAL_VISIBLE}
+                +{GOLD_FAQ_ITEMS.length - INITIAL_VISIBLE}
               </span>
             </button>
+            {showViewAllLink ? (
+              <Link
+                href="/faq"
+                className="text-sm text-[#b8973a] tracking-widest hover:text-[#8a7330] transition-colors underline underline-offset-4"
+              >
+                查看全部 Q&amp;A
+              </Link>
+            ) : null}
           </div>
         )}
 
-        {showAll && (
+        {!showAllByDefault && showAll && (
           <div className="mt-10 text-center">
             <button
               onClick={() => {

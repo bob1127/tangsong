@@ -23,7 +23,7 @@ const Hero = ({ initialMetalsData = null, heroSlides }: HeroProps) => {
       <ScientificDetection />
       <News />
       <HistoricalTrendChart />
-      <GoldFAQ />
+      <GoldFAQ showViewAllLink />
       <HomeSiteLinks />
     </div>
   )

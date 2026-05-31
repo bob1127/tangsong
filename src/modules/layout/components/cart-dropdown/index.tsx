@@ -1,11 +1,5 @@
 "use client"
 
-import {
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-  Transition,
-} from "@headlessui/react"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
@@ -15,7 +9,9 @@ import LineItemPrice from "@modules/common/components/line-item-price"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Thumbnail from "@modules/products/components/thumbnail"
 import { usePathname } from "next/navigation"
-import { Fragment, useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { NavIconButton } from "../nav-icon-button"
+import { NavCartIcon } from "../nav-icons"
 
 const CartDropdown = ({
   cart: cartState,
@@ -75,33 +71,32 @@ const CartDropdown = ({
 
   return (
     <div
-      className="h-full z-50"
+      className="relative h-full z-50"
       onMouseEnter={openAndCancel}
       onMouseLeave={close}
     >
-      <Popover className="relative h-full">
-        <PopoverButton className="h-full">
-          <LocalizedClientLink
-            className="hover:text-ui-fg-base"
-            href="/cart"
-            data-testid="nav-cart-link"
-          >{`購物車 (${totalItems})`}</LocalizedClientLink>
-        </PopoverButton>
-        <Transition
-          show={cartDropdownOpen}
-          as={Fragment}
-          enter="transition ease-out duration-200"
-          enterFrom="opacity-0 translate-y-1"
-          enterTo="opacity-100 translate-y-0"
-          leave="transition ease-in duration-150"
-          leaveFrom="opacity-100 translate-y-0"
-          leaveTo="opacity-0 translate-y-1"
+      <NavIconButton
+        href="/cart"
+        label={`購物車，${totalItems} 件商品`}
+        badge={totalItems}
+        testId="nav-cart-link"
+      >
+        <NavCartIcon />
+      </NavIconButton>
+
+      <div
+        className={`hidden small:block absolute top-full right-0 pt-1 ${
+          cartDropdownOpen ? "pointer-events-auto" : "pointer-events-none"
+        }`}
+      >
+        <div
+          className={`w-[420px] border border-gray-200 bg-white text-ui-fg-base shadow-md transition-all duration-200 origin-top-right ${
+            cartDropdownOpen
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 -translate-y-1"
+          }`}
+          data-testid="nav-cart-dropdown"
         >
-          <PopoverPanel
-            static
-            className="hidden small:block absolute top-[calc(100%+1px)] right-0 bg-white border-x border-b border-gray-200 w-[420px] text-ui-fg-base"
-            data-testid="nav-cart-dropdown"
-          >
             <div className="p-4 flex items-center justify-center">
               <h3 className="text-large-semi">購物車</h3>
             </div>
@@ -219,9 +214,8 @@ const CartDropdown = ({
                 </div>
               </div>
             )}
-          </PopoverPanel>
-        </Transition>
-      </Popover>
+        </div>
+      </div>
     </div>
   )
 }
