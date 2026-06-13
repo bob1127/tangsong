@@ -1,5 +1,4 @@
-import { HttpTypes } from "@medusajs/types"
-import { absolutePublicUrl, SITE_URL } from "@lib/util/site-url"
+import { SITE_URL } from "@lib/util/site-url"
 import {
   buildStorePriceOffers,
   deriveMetalDisplayPrices,
@@ -125,21 +124,6 @@ function buildSiteNavigationSchemas() {
     url: siteNavAbsoluteUrl(link.path),
     isPartOf: { "@id": WEBSITE_ID },
   }))
-}
-
-function buildMainPagesItemListSchema() {
-  return {
-    "@type": "ItemList",
-    "@id": `${SITE_URL}/#main-pages`,
-    name: "唐宋珠寶網站主要頁面",
-    itemListElement: PRIMARY_SITE_LINKS.map((link, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      name: link.name,
-      description: link.description,
-      url: siteNavAbsoluteUrl(link.path),
-    })),
-  }
 }
 
 export const homeFaqSchema = {
@@ -389,7 +373,6 @@ export function buildHomeCoreSchemaGraph(metals?: MetalsData | null) {
     websiteSchema,
     buildStoreSchemaWithMetals(metals),
     buildHomeWebPageSchema(metals),
-    buildMainPagesItemListSchema(),
     ...buildSiteNavigationSchemas(),
     homeFaqSchema,
   ]
@@ -401,55 +384,5 @@ export function buildHomeCoreSchemaGraph(metals?: MetalsData | null) {
   return {
     "@context": SCHEMA_CONTEXT,
     "@graph": graph,
-  }
-}
-
-export function buildProductListSchema(
-  products: HttpTypes.StoreProduct[],
-  countryCode: string
-) {
-  return {
-    "@context": SCHEMA_CONTEXT,
-    "@type": "ItemList",
-    name: "唐宋珠寶精選商品",
-    url: absolutePublicUrl("/store", countryCode),
-    itemListElement: products.map((product, index) => {
-      const cheapestVariant = (product.variants as any[])
-        ?.filter((v) => !!v.calculated_price?.calculated_amount)
-        .sort(
-          (a, b) =>
-            a.calculated_price.calculated_amount -
-            b.calculated_price.calculated_amount
-        )[0]
-
-      const price = cheapestVariant?.calculated_price?.calculated_amount
-      const currency =
-        cheapestVariant?.calculated_price?.currency_code?.toUpperCase() ??
-        "TWD"
-
-      const item: Record<string, unknown> = {
-        "@type": "Product",
-        name: product.title,
-        url: absolutePublicUrl(`/products/${product.handle}`, countryCode),
-        ...(product.description && { description: product.description }),
-        ...(product.thumbnail && { image: product.thumbnail }),
-      }
-
-      if (price != null) {
-        item.offers = {
-          "@type": "Offer",
-          priceCurrency: currency,
-          price: price,
-          availability: "https://schema.org/InStock",
-          url: absolutePublicUrl(`/products/${product.handle}`, countryCode),
-        }
-      }
-
-      return {
-        "@type": "ListItem",
-        position: index + 1,
-        item,
-      }
-    }),
   }
 }

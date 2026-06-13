@@ -4,7 +4,10 @@ export {
   type SiteNavLink,
 } from "./site-navigation"
 export { buildHomeMetadata } from "./home-metadata"
+export { buildHomeCoreSchemaGraph } from "./home-schemas"
 export {
-  buildHomeCoreSchemaGraph,
-  buildProductListSchema,
-} from "./home-schemas"
+  buildCommerceOffer,
+  buildProductDescription,
+  buildProductItemListSchema,
+  buildProductSchemaNode,
+} from "./commerce-schema"

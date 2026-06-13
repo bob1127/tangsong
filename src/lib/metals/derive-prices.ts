@@ -16,8 +16,10 @@ export function deriveMetalDisplayPrices(
 
   const storeGoldSell = data.gold_sell ?? (rawGold > 0 ? rawGold + 800 : 0)
   const storeGoldBuy = data.gold_buy ?? (rawGold > 0 ? rawGold - 200 : 0)
-  const storeGoldBullionBuy = rawGold > 0 ? rawGold - 100 : 0
-  const storeSilverBuy = rawAg > 0 ? rawAg - 5 : 0
+  const storeGoldBullionBuy =
+    data.gold_bullion_buy ?? (rawGold > 0 ? rawGold - 100 : 0)
+  const storeSilverBuy =
+    data.silver_buy ?? (rawAg > 0 ? rawAg - 5 : 0)
   const store18kBuy =
     data.k18_buy ?? (storeGoldBuy > 0 ? Math.round(storeGoldBuy * 0.6) : 0)
   const store14kBuy =

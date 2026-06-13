@@ -1,15 +1,10 @@
 import Hero from "@modules/home/components/hero"
 import { getRegion } from "@lib/data/regions"
-import { listProducts } from "@lib/data/products"
 import { getLatestMetals } from "@lib/data/metals"
 import { getHeroCarouselSlides } from "@lib/data/hero-carousel"
-import {
-  buildHomeMetadata,
-  buildHomeCoreSchemaGraph,
-  buildProductListSchema,
-} from "@lib/seo"
+import { buildHomeMetadata, buildHomeCoreSchemaGraph } from "@lib/seo"
 
-export const revalidate = 60
+export const revalidate = 0
 
 export const metadata = buildHomeMetadata()
 
@@ -41,32 +36,13 @@ export default async function Home(props: {
     )
   }
 
-  const {
-    response: { products },
-  } = await listProducts({
-    pageParam: 1,
-    queryParams: {
-      limit: 24,
-      fields:
-        "*variants.calculated_price,+variants.inventory_quantity,*variants.images",
-    },
-    regionId: region.id,
-  })
-
   const coreGraph = buildHomeCoreSchemaGraph(metalsData)
-  const productListSchema = buildProductListSchema(products, countryCode)
 
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(coreGraph) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(productListSchema),
-        }}
       />
       <Hero initialMetalsData={metalsData} heroSlides={heroSlides} />
     </>

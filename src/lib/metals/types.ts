@@ -12,6 +12,8 @@ export interface MetalsData {
   base_palladium_twd_qian?: number
   gold_sell?: number
   gold_buy?: number
+  gold_bullion_buy?: number
+  silver_buy?: number
   k18_buy?: number
   k14_buy?: number
   pt950_sell?: number

@@ -1,6 +1,11 @@
 import type { HttpTypes } from "@medusajs/types"
 import { SITE_URL, canonicalUrl } from "@lib/util/site-url"
 import {
+  buildCommerceOffer,
+  buildProductDescription,
+  isProductInStock,
+} from "@lib/seo/commerce-schema"
+import {
   getProductSeo,
   stripHtml,
   truncateDescription,
@@ -46,56 +51,15 @@ function isInStock(product: HttpTypes.StoreProduct): boolean {
 function buildOffers(product: HttpTypes.StoreProduct, handle: string) {
   const priceRange = getPriceRange(product)
   const url = productPageUrl(handle)
-  const availability = isInStock(product)
-    ? "https://schema.org/InStock"
-    : "https://schema.org/OutOfStock"
 
-  if (!priceRange) {
-    return {
-      "@type": "Offer",
-      url,
-      priceCurrency: "TWD",
-      availability,
-      itemCondition: "https://schema.org/NewCondition",
-      seller: {
-        "@type": "Organization",
-        name: "唐宋珠寶",
-        url: SITE_URL,
-      },
-    }
-  }
-
-  if (priceRange.lowPrice === priceRange.highPrice) {
-    return {
-      "@type": "Offer",
-      url,
-      priceCurrency: priceRange.currency,
-      price: priceRange.lowPrice,
-      availability,
-      itemCondition: "https://schema.org/NewCondition",
-      seller: {
-        "@type": "Organization",
-        name: "唐宋珠寶",
-        url: SITE_URL,
-      },
-    }
-  }
-
-  return {
-    "@type": "AggregateOffer",
-    url,
-    priceCurrency: priceRange.currency,
-    lowPrice: priceRange.lowPrice,
-    highPrice: priceRange.highPrice,
+  return buildCommerceOffer(url, {
+    price: priceRange?.lowPrice,
+    currency: priceRange?.currency,
+    inStock: isInStock(product),
+    lowPrice: priceRange?.lowPrice,
+    highPrice: priceRange?.highPrice,
     offerCount: product.variants?.length ?? 1,
-    availability,
-    itemCondition: "https://schema.org/NewCondition",
-    seller: {
-      "@type": "Organization",
-      name: "唐宋珠寶",
-      url: SITE_URL,
-    },
-  }
+  })
 }
 
 function getProductImages(product: HttpTypes.StoreProduct): string[] {
@@ -181,7 +145,8 @@ function buildFallbackProductNode(
   const images = getProductImages(product)
   const description =
     seo.seo_description ||
-    (product.description ? stripHtml(product.description) : "")
+    (product.description ? stripHtml(product.description) : "") ||
+    buildProductDescription(product)
 
   return {
     "@type": "Product",
@@ -248,7 +213,7 @@ function enrichProductNode(
     enriched.description =
       enriched.description ||
       seo.seo_description ||
-      (product.description ? stripHtml(product.description) : "")
+      buildProductDescription(product)
     if (!enriched.image && images.length > 0) {
       enriched.image = images
     }

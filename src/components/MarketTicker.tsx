@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { fetchLatestMetalsClient } from "@lib/metals/fetch-metals"
 
 interface MetalsData {
   updated_at?: string
@@ -67,31 +68,9 @@ export default function MarketTicker() {
     const fetchPrice = async () => {
       try {
         setError(false)
-        const backendUrl =
-          process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
-        const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
+        const latestData = await fetchLatestMetalsClient()
 
-        // 防快取機制
-        const targetUrl = `${backendUrl}/store/metals?nocache=${new Date().getTime()}`
-
-        const res = await fetch(targetUrl, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "x-publishable-api-key": apiKey,
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            Pragma: "no-cache",
-            Expires: "0",
-          },
-          cache: "no-store",
-        })
-
-        if (!res.ok) throw new Error("API 請求失敗")
-
-        const json = await res.json()
-
-        if (json.success) {
-          const latestData = Array.isArray(json.data) ? json.data[0] : json.data
+        if (latestData) {
           setData(latestData)
         } else {
           throw new Error("回傳格式不符預期")

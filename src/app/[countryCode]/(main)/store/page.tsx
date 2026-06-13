@@ -3,19 +3,15 @@ import { SortOptions } from "@modules/store/components/refinement-list/sort-prod
 import StoreTemplate from "@modules/store/templates"
 import { listProducts } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
-import { HttpTypes } from "@medusajs/types"
+import { buildProductItemListSchema } from "@lib/seo/commerce-schema"
 import {
   SITE_URL,
   absolutePublicUrl,
   canonicalUrl,
 } from "@lib/util/site-url"
 
-// ISR：商城頁每 60 秒重新驗證，後台新增/下架商品 60 秒內前端可見
 export const revalidate = 60
 
-// ==========================
-// 1. 商城頁面 SEO 設定
-// ==========================
 export const metadata: Metadata = {
   title: "線上商城 | 黃金、K金、鑽石、鉑金珠寶首飾 | 唐宋珠寶 Tangsong",
   description:
@@ -58,96 +54,58 @@ export const metadata: Metadata = {
   },
 }
 
-// ==========================
-// 2. 靜態結構化資料
-// ==========================
-const collectionSchema = {
-  "@context": "https://schema.org",
-  "@type": "CollectionPage",
-  "@id": `${SITE_URL}/store#collection`,
-  name: "唐宋珠寶線上商城",
-  description:
-    "唐宋珠寶精選黃金、K金、鉑金婚戒、鑽石珠寶首飾，每件商品均經嚴格鑑定，值得信賴。",
-  url: `${SITE_URL}/store`,
-  image: "https://www.tangsong.com.tw/images/0002.jpg",
-  breadcrumb: {
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "首頁",
-        item: SITE_URL,
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "線上商城",
-        item: `${SITE_URL}/store`,
-      },
-    ],
-  },
-}
+const storePageUrl = canonicalUrl("/store")
 
-// ==========================
-// 3. 動態商品 ItemList 產生函式
-// ==========================
-function buildItemListSchema(
-  products: HttpTypes.StoreProduct[],
-  countryCode: string
+function buildStoreSchemaGraph(
+  countryCode: string,
+  products: Awaited<
+    ReturnType<typeof listProducts>
+  >["response"]["products"]
 ) {
+  const graph: Record<string, unknown>[] = [
+    {
+      "@type": "CollectionPage",
+      "@id": `${storePageUrl}#collection`,
+      name: "唐宋珠寶線上商城",
+      description:
+        "唐宋珠寶精選黃金、K金、鉑金婚戒、鑽石珠寶首飾，每件商品均經嚴格鑑定，值得信賴。",
+      url: storePageUrl,
+      image: "https://www.tangsong.com.tw/images/0002.jpg",
+      breadcrumb: { "@id": `${storePageUrl}#breadcrumb` },
+      mainEntity: { "@id": `${storePageUrl}#product-list` },
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": `${storePageUrl}#breadcrumb`,
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "首頁",
+          item: SITE_URL,
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "線上商城",
+          item: storePageUrl,
+        },
+      ],
+    },
+  ]
+
+  if (products.length > 0) {
+    graph.push(
+      buildProductItemListSchema(products, countryCode, {
+        name: "唐宋珠寶精選商品清單",
+        pageUrl: absolutePublicUrl("/store", countryCode),
+      })
+    )
+  }
+
   return {
     "@context": "https://schema.org",
-    "@type": "ItemList",
-    name: "唐宋珠寶精選商品清單",
-    url: absolutePublicUrl("/store", countryCode),
-    numberOfItems: products.length,
-    itemListElement: products.map((product, index) => {
-      const cheapestVariant = (product.variants as any[])
-        ?.filter((v) => !!v.calculated_price?.calculated_amount)
-        .sort(
-          (a, b) =>
-            a.calculated_price.calculated_amount -
-            b.calculated_price.calculated_amount
-        )[0]
-
-      const price = cheapestVariant?.calculated_price?.calculated_amount
-      const currency =
-        cheapestVariant?.calculated_price?.currency_code?.toUpperCase() ??
-        "TWD"
-
-      const item: Record<string, unknown> = {
-        "@type": "Product",
-        name: product.title,
-        url: absolutePublicUrl(`/products/${product.handle}`, countryCode),
-        ...(product.description && { description: product.description }),
-        ...(product.thumbnail && { image: product.thumbnail }),
-        brand: {
-          "@type": "Brand",
-          name: "唐宋珠寶",
-        },
-      }
-
-      if (price != null) {
-        item.offers = {
-          "@type": "Offer",
-          priceCurrency: currency,
-          price: price,
-          availability: "https://schema.org/InStock",
-          seller: {
-            "@type": "Organization",
-            name: "唐宋珠寶",
-          },
-          url: absolutePublicUrl(`/products/${product.handle}`, countryCode),
-        }
-      }
-
-      return {
-        "@type": "ListItem",
-        position: index + 1,
-        item,
-      }
-    }),
+    "@graph": graph,
   }
 }
 
@@ -167,9 +125,18 @@ export default async function StorePage(props: Params) {
   const { sortBy, page } = searchParams
   const { countryCode } = params
 
-  // 動態抓取商品（含價格），生成 Product 結構化資料
   const region = await getRegion(countryCode)
-  let itemListSchema = null
+  let schemaGraph: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": `${storePageUrl}#collection`,
+        name: "唐宋珠寶線上商城",
+        url: storePageUrl,
+      },
+    ],
+  }
 
   if (region) {
     const {
@@ -183,19 +150,14 @@ export default async function StorePage(props: Params) {
       },
       regionId: region.id,
     })
-    itemListSchema = buildItemListSchema(products, countryCode)
+    schemaGraph = buildStoreSchemaGraph(countryCode, products)
   }
-
-  const combinedSchemas = [
-    collectionSchema,
-    ...(itemListSchema ? [itemListSchema] : []),
-  ]
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(combinedSchemas) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaGraph) }}
       />
       <StoreTemplate
         sortBy={sortBy}

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { deriveMetalDisplayPrices } from "@lib/metals/derive-prices"
+import { fetchLatestMetalsClient } from "@lib/metals/fetch-metals"
 import type { MetalsData } from "@lib/metals/types"
 import styles from "./top-nav-price-ticker.module.css"
 
@@ -31,25 +32,7 @@ function buildTickerItems(data: MetalsData | null): string[] {
 }
 
 async function fetchLatestMetals(): Promise<MetalsData | null> {
-  const backendUrl =
-    process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
-  const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
-
-  const res = await fetch(`${backendUrl}/store/metals?nocache=${Date.now()}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "x-publishable-api-key": apiKey,
-    },
-    cache: "no-store",
-  })
-
-  if (!res.ok) return null
-
-  const json = await res.json()
-  if (!json.success) return null
-
-  return Array.isArray(json.data) ? json.data[0] : json.data
+  return fetchLatestMetalsClient()
 }
 
 export default function TopNavPriceTicker({

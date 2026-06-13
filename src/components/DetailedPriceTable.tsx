@@ -2,44 +2,12 @@
 
 import React, { useEffect, useState } from "react"
 import { deriveMetalDisplayPrices } from "@lib/metals/derive-prices"
+import { fetchLatestMetalsClient } from "@lib/metals/fetch-metals"
 import type { MetalsData } from "@lib/metals/types"
 import TradingViewChart from "./TradingViewChart"
 
 type DetailedPriceTableProps = {
   initialData?: MetalsData | null
-}
-
-async function fetchLatestMetals(): Promise<MetalsData | null> {
-  const backendUrl =
-    process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
-  const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
-
-  const res = await fetch(
-    `${backendUrl}/store/metals?nocache=${Date.now()}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "x-publishable-api-key": apiKey,
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
-      },
-      cache: "no-store",
-    }
-  )
-
-  if (!res.ok) throw new Error("API 請求失敗")
-
-  const contentType = res.headers.get("content-type")
-  if (!contentType?.includes("application/json")) {
-    throw new TypeError("回傳的格式不是 JSON，請確認 API 路徑是否正確")
-  }
-
-  const json = await res.json()
-  if (!json.success) throw new Error("回傳格式不符預期")
-
-  return Array.isArray(json.data) ? json.data[0] : json.data
 }
 
 export default function DetailedPriceTable({
@@ -56,7 +24,7 @@ export default function DetailedPriceTable({
     const refreshPrice = async () => {
       try {
         setError(false)
-        const latest = await fetchLatestMetals()
+        const latest = await fetchLatestMetalsClient()
         if (!cancelled && latest) {
           setData(latest)
         }
