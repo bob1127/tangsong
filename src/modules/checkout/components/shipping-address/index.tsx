@@ -1,20 +1,21 @@
 import { HttpTypes } from "@medusajs/types"
 import Input from "@modules/common/components/input"
-import Checkbox from "@modules/common/components/checkbox"
-import React, { useEffect, useState, useMemo } from "react"
+import React, { useEffect, useMemo, useState } from "react"
+
+function buildFullName(
+  firstName?: string | null,
+  lastName?: string | null
+): string {
+  return [firstName, lastName].filter(Boolean).join(" ").trim()
+}
 
 const ShippingAddress = ({
   cart,
   customer,
-  checked,
-  onChange,
 }: {
   cart: HttpTypes.StoreCart | null
   customer: HttpTypes.StoreCustomer | null
-  checked: boolean
-  onChange: () => void
 }) => {
-  // 1. 找出會員的預設「收件地址」
   const defaultAddress = useMemo(() => {
     if (!customer?.addresses?.length) return null
     return (
@@ -23,73 +24,30 @@ const ShippingAddress = ({
     )
   }, [customer])
 
-  // 2. 初始狀態：全部換成 shipping_address 屬性
-  const [formData, setFormData] = useState<Record<string, any>>({
+  const buildInitialData = () => ({
     "shipping_address.first_name":
-      cart?.shipping_address?.first_name || defaultAddress?.first_name || "",
-    "shipping_address.last_name":
-      cart?.shipping_address?.last_name || defaultAddress?.last_name || "",
-    "shipping_address.address_1":
-      cart?.shipping_address?.address_1 || defaultAddress?.address_1 || "",
-    "shipping_address.company":
-      cart?.shipping_address?.company || defaultAddress?.company || "",
-    "shipping_address.postal_code":
-      cart?.shipping_address?.postal_code || defaultAddress?.postal_code || "",
-    "shipping_address.city":
-      cart?.shipping_address?.city || defaultAddress?.city || "",
-    "shipping_address.country_code":
-      cart?.shipping_address?.country_code ||
-      defaultAddress?.country_code ||
-      "tw",
-    "shipping_address.province":
-      cart?.shipping_address?.province || defaultAddress?.province || "",
+      buildFullName(
+        cart?.shipping_address?.first_name,
+        cart?.shipping_address?.last_name
+      ) ||
+      buildFullName(defaultAddress?.first_name, defaultAddress?.last_name) ||
+      "",
     "shipping_address.phone":
       cart?.shipping_address?.phone ||
       defaultAddress?.phone ||
       customer?.phone ||
       "",
+    email: cart?.email || customer?.email || "",
   })
 
-  // 3. 連動更新
-  useEffect(() => {
-    if (cart?.shipping_address || defaultAddress) {
-      setFormData({
-        "shipping_address.first_name":
-          cart?.shipping_address?.first_name ||
-          defaultAddress?.first_name ||
-          "",
-        "shipping_address.last_name":
-          cart?.shipping_address?.last_name || defaultAddress?.last_name || "",
-        "shipping_address.address_1":
-          cart?.shipping_address?.address_1 || defaultAddress?.address_1 || "",
-        "shipping_address.company":
-          cart?.shipping_address?.company || defaultAddress?.company || "",
-        "shipping_address.postal_code":
-          cart?.shipping_address?.postal_code ||
-          defaultAddress?.postal_code ||
-          "",
-        "shipping_address.city":
-          cart?.shipping_address?.city || defaultAddress?.city || "",
-        "shipping_address.country_code":
-          cart?.shipping_address?.country_code ||
-          defaultAddress?.country_code ||
-          "tw",
-        "shipping_address.province":
-          cart?.shipping_address?.province || defaultAddress?.province || "",
-        "shipping_address.phone":
-          cart?.shipping_address?.phone ||
-          defaultAddress?.phone ||
-          customer?.phone ||
-          "",
-      })
-    }
-  }, [cart?.shipping_address, defaultAddress, customer?.phone])
+  const [formData, setFormData] = useState(buildInitialData)
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLInputElement | HTMLSelectElement
-    >
-  ) => {
+  useEffect(() => {
+    setFormData(buildInitialData())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cart?.shipping_address, cart?.email, defaultAddress, customer?.phone, customer?.email])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -98,93 +56,38 @@ const ShippingAddress = ({
 
   return (
     <>
-      {/* 關鍵：隱藏的國家欄位，必須是 shipping_address */}
-      <input
-        type="hidden"
-        name="shipping_address.country_code"
-        value={formData["shipping_address.country_code"]}
-      />
+      <input type="hidden" name="shipping_address.country_code" value="tw" />
 
-      <div className="grid grid-cols-2 gap-4">
-        {/* 姓名與電話 */}
-
+      <div className="flex flex-col gap-4">
         <Input
-          label="名字"
+          label="姓名"
           name="shipping_address.first_name"
-          autoComplete="given-name"
+          autoComplete="name"
           value={formData["shipping_address.first_name"]}
           onChange={handleChange}
           required
-          data-testid="shipping-first-name-input"
+          data-testid="shipping-name-input"
         />
         <Input
-          label="聯絡電話"
+          label="電話"
           name="shipping_address.phone"
+          type="tel"
           autoComplete="tel"
           value={formData["shipping_address.phone"]}
           onChange={handleChange}
           required
           data-testid="shipping-phone-input"
         />
-
-        {/* 台灣地址結構 */}
         <Input
-          label="縣市"
-          name="shipping_address.province"
-          autoComplete="address-level1"
-          value={formData["shipping_address.province"]}
+          label="信箱"
+          name="email"
+          type="email"
+          autoComplete="email"
+          value={formData.email}
           onChange={handleChange}
-          data-testid="shipping-province-input"
-        />
-        <Input
-          label="鄉鎮市區"
-          name="shipping_address.city"
-          autoComplete="address-level2"
-          value={formData["shipping_address.city"]}
-          onChange={handleChange}
-          data-testid="shipping-city-input"
-        />
-        <Input
-          label="郵遞區號"
-          name="shipping_address.postal_code"
-          autoComplete="postal-code"
-          value={formData["shipping_address.postal_code"]}
-          onChange={handleChange}
-          data-testid="shipping-postal-code-input"
-        />
-
-        <Input
-          label="公司/機構名稱 (選填)"
-          name="shipping_address.company"
-          value={formData["shipping_address.company"]}
-          onChange={handleChange}
-          autoComplete="organization"
-          data-testid="shipping-company-input"
+          data-testid="shipping-email-input"
         />
       </div>
-
-      {/* 詳細地址 */}
-      <div className="mt-4">
-        <Input
-          label="詳細地址 (路名/巷弄/號/樓)"
-          name="shipping_address.address_1"
-          autoComplete="address-line1"
-          value={formData["shipping_address.address_1"]}
-          onChange={handleChange}
-          data-testid="shipping-address-input"
-        />
-      </div>
-
-      {/* 同帳單地址的勾選框 */}
-      {/* <div className="mt-8">
-        <Checkbox
-          label="帳單地址與收件地址相同"
-          name="same_as_billing"
-          checked={checked}
-          onChange={onChange}
-          data-testid="billing-address-checkbox"
-        />
-      </div> */}
     </>
   )
 }

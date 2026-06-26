@@ -1,22 +1,58 @@
-export default function medusaError(error: any): never {
-  if (error.response) {
-    // The request was made and the server responded with a status code
-    // that falls out of the range of 2xx
-    const u = new URL(error.config.url, error.config.baseURL)
-    console.error("Resource:", u.toString())
-    console.error("Response data:", error.response.data)
-    console.error("Status code:", error.response.status)
-    console.error("Headers:", error.response.headers)
+import { translateCheckoutError } from "./checkout-error"
 
-    // Extracting the error message from the response data
-    const message = error.response.data.message || error.response.data
-
-    throw new Error(message.charAt(0).toUpperCase() + message.slice(1) + ".")
-  } else if (error.request) {
-    // The request was made but no response was received
-    throw new Error("No response received: " + error.request)
-  } else {
-    // Something happened in setting up the request that triggered an Error
-    throw new Error("Error setting up the request: " + error.message)
+export function extractMedusaErrorMessage(error: unknown): string {
+  if (!error || typeof error !== "object") {
+    return translateCheckoutError(String(error))
   }
+
+  const err = error as {
+    message?: string
+    response?: { data?: { message?: unknown } | unknown }
+    config?: { url?: string; baseURL?: string }
+  }
+
+  if (err.response?.data) {
+    const data = err.response.data as { message?: unknown }
+    const message = data?.message ?? err.response.data
+    const raw =
+      typeof message === "string" ? message : JSON.stringify(message)
+    return translateCheckoutError(raw)
+  }
+
+  return translateCheckoutError(err.message || String(error))
+}
+
+export function isNextRedirectError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false
+  const digest = "digest" in error ? String((error as { digest?: string }).digest) : ""
+  return digest.startsWith("NEXT_REDIRECT")
+}
+
+export default function medusaError(error: unknown): never {
+  if (
+    error &&
+    typeof error === "object" &&
+    "response" in error &&
+    (error as { response?: unknown }).response
+  ) {
+    const err = error as {
+      response: { data?: unknown; status?: number; headers?: unknown }
+      config?: { url?: string; baseURL?: string }
+    }
+
+    try {
+      if (err.config?.url) {
+        const u = new URL(err.config.url, err.config.baseURL || undefined)
+        console.error("Resource:", u.toString())
+      }
+    } catch {
+      // ignore malformed config
+    }
+
+    console.error("Response data:", err.response.data)
+    console.error("Status code:", err.response.status)
+    console.error("Headers:", err.response.headers)
+  }
+
+  throw new Error(extractMedusaErrorMessage(error))
 }

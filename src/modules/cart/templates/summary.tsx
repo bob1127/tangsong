@@ -15,7 +15,15 @@ type SummaryProps = {
 }
 
 function getCheckoutStep(cart: HttpTypes.StoreCart) {
-  if (!cart?.shipping_address?.address_1 || !cart.email) {
+  const name = [
+    cart?.shipping_address?.first_name,
+    cart?.shipping_address?.last_name,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .trim()
+
+  if (!name || !cart?.shipping_address?.phone) {
     return "address"
   } else if (cart?.shipping_methods?.length === 0) {
     return "delivery"

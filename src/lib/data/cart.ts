@@ -2,7 +2,11 @@
 
 import { sdk } from "@lib/config"
 import { publicPath } from "@lib/util/site-url"
-import medusaError from "@lib/util/medusa-error"
+import { translateCheckoutError } from "@lib/util/checkout-error"
+import medusaError, {
+  extractMedusaErrorMessage,
+  isNextRedirectError,
+} from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
@@ -22,7 +26,11 @@ import { getLocale } from "@lib/data/locale-actions"
  * @param cartId - optional - The ID of the cart to retrieve.
  * @returns The cart object if found, or null if not found.
  */
-export async function retrieveCart(cartId?: string, fields?: string) {
+export async function retrieveCart(
+  cartId?: string,
+  fields?: string,
+  options?: { fresh?: boolean }
+) {
   const id = cartId || (await getCartId())
   fields ??=
     "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
@@ -35,9 +43,7 @@ export async function retrieveCart(cartId?: string, fields?: string) {
     ...(await getAuthHeaders()),
   }
 
-  const next = {
-    ...(await getCacheOptions("carts")),
-  }
+  const fresh = options?.fresh === true
 
   return await sdk.client
     .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${id}`, {
@@ -46,12 +52,27 @@ export async function retrieveCart(cartId?: string, fields?: string) {
         fields,
       },
       headers,
-      next,
-      cache: "force-cache",
+      ...(fresh
+        ? { cache: "no-store" as const }
+        : {
+            next: { ...(await getCacheOptions("carts")) },
+            cache: "force-cache" as const,
+          }),
     })
     .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
     .catch(() => null)
 }
+
+const CHECKOUT_CART_FIELDS =
+  "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, *payment_collection, *payment_collection.payment_sessions, *shipping_address, email"
+
+async function safeRevalidateTag(tag: string) {
+  if (tag) {
+    revalidateTag(tag)
+  }
+}
+
+export type PlaceOrderResult = { ok: true } | { ok: false; error: string }
 
 export async function getOrSetCart(countryCode: string) {
   const region = await getRegion(countryCode)
@@ -232,8 +253,7 @@ export async function setShippingMethod({
   return sdk.store.cart
     .addShippingMethod(cartId, { option_id: shippingMethodId }, {}, headers)
     .then(async () => {
-      const cartCacheTag = await getCacheTag("carts")
-      revalidateTag(cartCacheTag)
+      await safeRevalidateTag(await getCacheTag("carts"))
     })
     .catch(medusaError)
 }
@@ -249,8 +269,7 @@ export async function initiatePaymentSession(
   return sdk.store.payment
     .initiatePaymentSession(cart, data, {}, headers)
     .then(async (resp) => {
-      const cartCacheTag = await getCacheTag("carts")
-      revalidateTag(cartCacheTag)
+      await safeRevalidateTag(await getCacheTag("carts"))
       return resp
     })
     .catch(medusaError)
@@ -340,51 +359,51 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
     if (!formData) {
       throw new Error("No form data found when setting addresses")
     }
-    const cartId = getCartId()
+    const cartId = await getCartId()
     if (!cartId) {
       throw new Error("No existing cart found when setting addresses")
     }
 
+    const name = String(formData.get("shipping_address.first_name") || "").trim()
+    const phone = String(formData.get("shipping_address.phone") || "").trim()
+    const email = String(formData.get("email") || "").trim()
+
+    if (!name) {
+      return "請填寫姓名"
+    }
+    if (!phone) {
+      return "請填寫電話"
+    }
+
+    const pickupAddress = {
+      first_name: name,
+      last_name: "",
+      address_1: "到店取貨",
+      address_2: "",
+      company: "",
+      postal_code: "108",
+      city: "台北市",
+      country_code: "tw",
+      province: "台北市",
+      phone,
+    }
+
     const data = {
-      shipping_address: {
-        first_name: formData.get("shipping_address.first_name"),
-        last_name: formData.get("shipping_address.last_name"),
-        address_1: formData.get("shipping_address.address_1"),
-        address_2: "",
-        company: formData.get("shipping_address.company"),
-        postal_code: formData.get("shipping_address.postal_code"),
-        city: formData.get("shipping_address.city"),
-        country_code: formData.get("shipping_address.country_code"),
-        province: formData.get("shipping_address.province"),
-        phone: formData.get("shipping_address.phone"),
-      },
-      email: formData.get("email"),
-    } as any
+      shipping_address: pickupAddress,
+      billing_address: pickupAddress,
+      ...(email ? { email } : {}),
+    } as HttpTypes.StoreUpdateCart
 
-    const sameAsBilling = formData.get("same_as_billing")
-    if (sameAsBilling === "on") data.billing_address = data.shipping_address
-
-    if (sameAsBilling !== "on")
-      data.billing_address = {
-        first_name: formData.get("billing_address.first_name"),
-        last_name: formData.get("billing_address.last_name"),
-        address_1: formData.get("billing_address.address_1"),
-        address_2: "",
-        company: formData.get("billing_address.company"),
-        postal_code: formData.get("billing_address.postal_code"),
-        city: formData.get("billing_address.city"),
-        country_code: formData.get("billing_address.country_code"),
-        province: formData.get("billing_address.province"),
-        phone: formData.get("billing_address.phone"),
-      }
     await updateCart(data)
   } catch (e: any) {
-    return e.message
+    const message = translateCheckoutError(e.message || String(e))
+    if (message.includes("已完成結帳")) {
+      await removeCartId()
+    }
+    return message
   }
 
-  redirect(
-    `/${formData.get("shipping_address.country_code")}/checkout?step=delivery`
-  )
+  redirect(publicPath("/checkout?step=delivery"))
 }
 
 /**
@@ -392,43 +411,97 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
  * @param cartId - optional - The ID of the cart to place an order for.
  * @returns The cart object if the order was successful, or null if not.
  */
-export async function placeOrder(cartId?: string) {
-  const id = cartId || (await getCartId())
+export async function placeOrder(cartId?: string): Promise<PlaceOrderResult> {
+  try {
+    const id = cartId || (await getCartId())
 
-  if (!id) {
-    throw new Error("No existing cart found when placing an order")
+    if (!id) {
+      return {
+        ok: false,
+        error: translateCheckoutError(
+          "No existing cart found when placing an order"
+        ),
+      }
+    }
+
+    const headers = {
+      ...(await getAuthHeaders()),
+    }
+
+    let cart = await retrieveCart(id, CHECKOUT_CART_FIELDS, { fresh: true })
+
+    if (!cart) {
+      return {
+        ok: false,
+        error: translateCheckoutError(
+          "No existing cart found when placing an order"
+        ),
+      }
+    }
+
+    if (!cart.shipping_address?.phone) {
+      return { ok: false, error: "請先填寫姓名與電話。" }
+    }
+
+    if (!cart.shipping_methods?.length) {
+      return { ok: false, error: "請先選擇到店取貨方式。" }
+    }
+
+    if (!cart.email) {
+      const phoneDigits = cart.shipping_address.phone.replace(/\D/g, "")
+      const guestEmail = phoneDigits
+        ? `guest+${phoneDigits}@tangsong.com.tw`
+        : `guest+${Date.now()}@tangsong.com.tw`
+
+      await sdk.store.cart.update(id, { email: guestEmail }, {}, headers)
+      cart =
+        (await retrieveCart(id, CHECKOUT_CART_FIELDS, { fresh: true })) ?? cart
+    }
+
+    const hasPaymentSession =
+      (cart.payment_collection?.payment_sessions?.length ?? 0) > 0
+
+    if (!hasPaymentSession) {
+      await sdk.store.payment.initiatePaymentSession(
+        cart,
+        { provider_id: "pp_system_default" },
+        {},
+        headers
+      )
+      cart =
+        (await retrieveCart(id, CHECKOUT_CART_FIELDS, { fresh: true })) ?? cart
+    }
+
+    const cartRes = await sdk.store.cart.complete(id, {}, headers)
+
+    if (cartRes?.type === "order") {
+      const countryCode =
+        cartRes.order.shipping_address?.country_code?.toLowerCase()
+
+      await safeRevalidateTag(await getCacheTag("carts"))
+      await safeRevalidateTag(await getCacheTag("orders"))
+      await removeCartId()
+      redirect(
+        publicPath(`/order/${cartRes.order.id}/confirmed`, countryCode)
+      )
+    }
+
+    return {
+      ok: false,
+      error: "付款授權失敗，訂單未建立。請稍候再試，或聯絡客服人員協助。",
+    }
+  } catch (e: unknown) {
+    if (isNextRedirectError(e)) {
+      throw e
+    }
+
+    const message = extractMedusaErrorMessage(e)
+    if (message.includes("已完成結帳")) {
+      await removeCartId()
+    }
+
+    return { ok: false, error: message }
   }
-
-  const headers = {
-    ...(await getAuthHeaders()),
-  }
-
-  const cartRes = await sdk.store.cart
-    .complete(id, {}, headers)
-    .then(async (cartRes) => {
-      const cartCacheTag = await getCacheTag("carts")
-      revalidateTag(cartCacheTag)
-      return cartRes
-    })
-    .catch(medusaError)
-
-  if (cartRes?.type === "order") {
-    const countryCode =
-      cartRes.order.shipping_address?.country_code?.toLowerCase()
-
-    const orderCacheTag = await getCacheTag("orders")
-    revalidateTag(orderCacheTag)
-
-    removeCartId()
-    redirect(
-      publicPath(`/order/${cartRes?.order.id}/confirmed`, countryCode)
-    )
-  }
-
-  // cart.complete() returned type="cart" — payment authorization failed
-  throw new Error(
-    "付款授權失敗，訂單未建立。請稍候再試，或聯絡客服人員協助。"
-  )
 }
 
 /**

@@ -1,6 +1,7 @@
 "use client"
 
 import { Radio, RadioGroup } from "@headlessui/react"
+import { translateCheckoutError } from "@lib/util/checkout-error"
 import { setShippingMethod } from "@lib/data/cart"
 import { calculatePriceForShippingOption } from "@lib/data/fulfillment"
 import { convertToLocale } from "@lib/util/money"
@@ -97,7 +98,7 @@ const Shipping: React.FC<ShippingProps> = ({
     await setShippingMethod({ cartId: cart.id, shippingMethodId: id })
       .catch((err) => {
         setShippingMethodId(currentId)
-        setError(err.message)
+        setError(translateCheckoutError(err.message))
       })
       .finally(() => {
         setIsLoading(false)
@@ -151,7 +152,7 @@ const Shipping: React.FC<ShippingProps> = ({
                 請選擇配送方式
               </span>
               <span className="mt-1 text-[#7A6B5D] text-sm font-serif">
-                您希望如何收取商品？
+                目前僅提供到店取貨及現場付款
               </span>
             </div>
 
@@ -334,6 +335,9 @@ const Shipping: React.FC<ShippingProps> = ({
         </>
       ) : (
         <div>
+          <Text className="font-serif text-[#7A6B5D] text-sm mb-3">
+            目前僅提供到店取貨及現場付款
+          </Text>
           <div className="text-sm">
             {cart && (cart.shipping_methods?.length ?? 0) > 0 && (
               <div className="flex flex-col w-full">

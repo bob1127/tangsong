@@ -42,7 +42,7 @@ export const PRIMARY_SITE_LINKS: SiteNavLink[] = [
     description: "黃金回收、K金收購、鉑金回收常見問題與專業解答。",
   },
   {
-    name: "專欄文章",
+    name: "珠寶知識與最新動態",
     path: "/blog",
     description: "黃金回收、今日金價、珠寶知識與市場動態專業文章。",
   },
