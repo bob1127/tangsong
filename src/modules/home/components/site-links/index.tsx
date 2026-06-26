@@ -17,9 +17,7 @@ export default function HomeSiteLinks() {
         >
           網站導覽
         </h2>
-        <p className="text-sm text-stone-500 mb-8">
-          快速前往唐宋珠寶主要服務頁面
-        </p>
+        <p className="text-sm text-stone-500 mb-8">前往唐宋珠寶主要服務頁面</p>
         <nav aria-label="網站主要頁面">
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {PRIMARY_SITE_LINKS.map((link) => (
