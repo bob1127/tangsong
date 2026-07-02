@@ -92,14 +92,6 @@ export default function DetailedPriceTable({
     return price.toLocaleString()
   }
 
-  const formatFinancial = (price: number) =>
-    price > 0 || price === 0
-      ? price.toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })
-      : "—"
-
   return (
     <div
       id="metal-prices"
@@ -141,6 +133,128 @@ export default function DetailedPriceTable({
 
           {/* ================= 右側主表格欄 ================= */}
           <div className="col-span-1 lg:col-span-3 space-y-6">
+            {/* 國際現貨行情表 */}
+            <div className="bg-[#3A0A0E] border border-[#D4AF37]/30 overflow-hidden shadow-xl rounded-sm">
+              <div className="bg-[#3A0A0E]/10 px-4 py-3.5 text-sm font-bold text-[#F3E5AB] border-b border-[#D4AF37]/20 tracking-wider">
+                國際現貨金價及貴金屬即時行情 (新台幣 / 台錢)
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-center">
+                  <thead className="bg-black/15 text-[#F3E5AB] text-xs">
+                    <tr>
+                      <th className="py-3 px-4 font-bold tracking-wider">
+                        商品名稱
+                      </th>
+                      <th className="py-3 px-4 font-bold text-[#A3E635]">
+                        買入 (Bid)
+                      </th>
+                      <th className="py-3 px-4 font-bold text-[#FF9B9B]">
+                        賣出 (Ask)
+                      </th>
+                      <th className="py-3 px-4 font-medium">漲跌 (+/-)</th>
+                      <th className="py-3 px-4 font-normal text-[#FDF5E6]/80">
+                        本日最高 (估位)
+                      </th>
+                      <th className="py-3 px-4 font-normal text-[#FDF5E6]/80">
+                        本日最低 (估位)
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors">
+                      <td className="py-3 px-4 text-[#F3E5AB] font-bold tracking-widest">
+                        黃金 Au
+                      </td>
+                      <td className="py-3 px-4 text-[#A3E635] font-bold font-mono text-base">
+                        {formatPrice(intlGoldBuy)}
+                      </td>
+                      <td className="py-3 px-4 text-[#FF9B9B] font-bold font-mono text-base">
+                        {formatPrice(intlGoldSell)}
+                      </td>
+                      <td className="py-3 px-4 text-[#FF9B9B] font-medium">
+                        -40.03 ▼
+                      </td>
+                      <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
+                        {formatPrice(rawGold + 160)}
+                      </td>
+                      <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
+                        {formatPrice(rawGold - 150)}
+                      </td>
+                    </tr>
+                    <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors bg-black/10">
+                      <td className="py-3 px-4 text-[#E4E4E4] font-bold tracking-widest">
+                        白金 Pt
+                      </td>
+                      <td className="py-3 px-4 text-[#A3E635] font-bold font-mono text-base">
+                        {formatPrice(intlPtBuy)}
+                      </td>
+                      <td className="py-3 px-4 text-[#FF9B9B] font-bold font-mono text-base">
+                        {formatPrice(intlPtSell)}
+                      </td>
+                      <td className="py-3 px-4 text-[#A3E635] font-medium">
+                        -236.01 ▼
+                      </td>
+                      <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
+                        {formatPrice(rawPt + 240)}
+                      </td>
+                      <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
+                        {formatPrice(rawPt - 20)}
+                      </td>
+                    </tr>
+                    <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors">
+                      <td className="py-3 px-4 text-[#D1D5DB] font-bold tracking-widest">
+                        白銀 Ag
+                      </td>
+                      <td className="py-3 px-4 text-[#A3E635] font-bold font-mono text-base">
+                        {formatPrice(intlAgBuy)}
+                      </td>
+                      <td className="py-3 px-4 text-[#FF9B9B] font-bold font-mono text-base">
+                        {formatPrice(intlAgSell)}
+                      </td>
+                      <td className="py-3 px-4 text-[#A3E635] font-medium">
+                        -8.06 ▼
+                      </td>
+                      <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
+                        {formatPrice(rawAg + 10)}
+                      </td>
+                      <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
+                        {formatPrice(rawAg - 6)}
+                      </td>
+                    </tr>
+                    <tr className="hover:bg-black/20 transition-colors bg-black/10">
+                      <td className="py-3 px-4 text-[#C1B6A4] font-bold tracking-widest">
+                        鈀金 Pd
+                      </td>
+                      <td className="py-3 px-4 text-[#A3E635] font-bold font-mono text-base">
+                        {formatPrice(intlPdBuy)}
+                      </td>
+                      <td className="py-3 px-4 text-[#FF9B9B] font-bold font-mono text-base">
+                        {formatPrice(intlPdSell)}
+                      </td>
+                      <td className="py-3 px-4 text-[#FF9B9B] font-medium">
+                        -15.20 ▼
+                      </td>
+                      <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
+                        {formatPrice(rawPd + 80)}
+                      </td>
+                      <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
+                        {formatPrice(rawPd - 60)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="bg-[#3A0A0E] border border-[#D4AF37]/30 overflow-hidden shadow-xl rounded-sm">
+              <div className="bg-[#3A0A0E]/10 px-4 py-3.5 text-sm font-bold text-[#F3E5AB] border-b border-[#D4AF37]/20 tracking-wider">
+                國際貴金屬走勢圖
+              </div>
+              <div className="bg-[#FAFAFA]">
+                <TradingViewChart embedded />
+              </div>
+            </div>
+
             {/* 實體門市牌告價 */}
             <div className="bg-gradient-to-br from-[#3A0A0E] to-[#801b15] border border-[#D4AF37]/40 overflow-hidden shadow-xl rounded-sm">
               <div className="bg-black/15 px-4 py-3.5 text-sm font-bold text-[#F3E5AB] border-b border-[#D4AF37]/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
@@ -271,128 +385,6 @@ export default function DetailedPriceTable({
                     </tr>
                   </tbody>
                 </table>
-              </div>
-            </div>
-
-            {/* 國際現貨行情表 */}
-            <div className="bg-[#3A0A0E] border border-[#D4AF37]/30 overflow-hidden shadow-xl rounded-sm">
-              <div className="bg-[#3A0A0E]/10 px-4 py-3.5 text-sm font-bold text-[#F3E5AB] border-b border-[#D4AF37]/20 tracking-wider">
-                國際現貨金價及貴金屬即時行情 (新台幣 / 台錢)
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-center">
-                  <thead className="bg-black/15 text-[#F3E5AB] text-xs">
-                    <tr>
-                      <th className="py-3 px-4 font-bold tracking-wider">
-                        商品名稱
-                      </th>
-                      <th className="py-3 px-4 font-bold text-[#A3E635]">
-                        買入 (Bid)
-                      </th>
-                      <th className="py-3 px-4 font-bold text-[#FF9B9B]">
-                        賣出 (Ask)
-                      </th>
-                      <th className="py-3 px-4 font-medium">漲跌 (+/-)</th>
-                      <th className="py-3 px-4 font-normal text-[#FDF5E6]/80">
-                        本日最高 (估位)
-                      </th>
-                      <th className="py-3 px-4 font-normal text-[#FDF5E6]/80">
-                        本日最低 (估位)
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors">
-                      <td className="py-3 px-4 text-[#F3E5AB] font-bold tracking-widest">
-                        黃金 Au
-                      </td>
-                      <td className="py-3 px-4 text-[#A3E635] font-bold font-mono text-base">
-                        {formatFinancial(intlGoldBuy)}
-                      </td>
-                      <td className="py-3 px-4 text-[#FF9B9B] font-bold font-mono text-base">
-                        {formatFinancial(intlGoldSell)}
-                      </td>
-                      <td className="py-3 px-4 text-[#FF9B9B] font-medium">
-                        -40.03 ▼
-                      </td>
-                      <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
-                        {formatFinancial(rawGold + 160)}
-                      </td>
-                      <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
-                        {formatFinancial(rawGold - 150)}
-                      </td>
-                    </tr>
-                    <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors bg-black/10">
-                      <td className="py-3 px-4 text-[#E4E4E4] font-bold tracking-widest">
-                        白金 Pt
-                      </td>
-                      <td className="py-3 px-4 text-[#A3E635] font-bold font-mono text-base">
-                        {formatFinancial(intlPtBuy)}
-                      </td>
-                      <td className="py-3 px-4 text-[#FF9B9B] font-bold font-mono text-base">
-                        {formatFinancial(intlPtSell)}
-                      </td>
-                      <td className="py-3 px-4 text-[#A3E635] font-medium">
-                        -236.01 ▼
-                      </td>
-                      <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
-                        {formatFinancial(rawPt + 240)}
-                      </td>
-                      <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
-                        {formatFinancial(rawPt - 20)}
-                      </td>
-                    </tr>
-                    <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors">
-                      <td className="py-3 px-4 text-[#D1D5DB] font-bold tracking-widest">
-                        白銀 Ag
-                      </td>
-                      <td className="py-3 px-4 text-[#A3E635] font-bold font-mono text-base">
-                        {formatFinancial(intlAgBuy)}
-                      </td>
-                      <td className="py-3 px-4 text-[#FF9B9B] font-bold font-mono text-base">
-                        {formatFinancial(intlAgSell)}
-                      </td>
-                      <td className="py-3 px-4 text-[#A3E635] font-medium">
-                        -8.06 ▼
-                      </td>
-                      <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
-                        {formatFinancial(rawAg + 10)}
-                      </td>
-                      <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
-                        {formatFinancial(rawAg - 6)}
-                      </td>
-                    </tr>
-                    <tr className="hover:bg-black/20 transition-colors bg-black/10">
-                      <td className="py-3 px-4 text-[#C1B6A4] font-bold tracking-widest">
-                        鈀金 Pd
-                      </td>
-                      <td className="py-3 px-4 text-[#A3E635] font-bold font-mono text-base">
-                        {formatFinancial(intlPdBuy)}
-                      </td>
-                      <td className="py-3 px-4 text-[#FF9B9B] font-bold font-mono text-base">
-                        {formatFinancial(intlPdSell)}
-                      </td>
-                      <td className="py-3 px-4 text-[#FF9B9B] font-medium">
-                        -15.20 ▼
-                      </td>
-                      <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
-                        {formatFinancial(rawPd + 80)}
-                      </td>
-                      <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
-                        {formatFinancial(rawPd - 60)}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="bg-[#3A0A0E] border border-[#D4AF37]/30 overflow-hidden shadow-xl rounded-sm">
-              <div className="bg-[#3A0A0E]/10 px-4 py-3.5 text-sm font-bold text-[#F3E5AB] border-b border-[#D4AF37]/20 tracking-wider">
-                國際貴金屬走勢圖
-              </div>
-              <div className="bg-[#FAFAFA]">
-                <TradingViewChart embedded />
               </div>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import type { MetalDisplayPrices } from "@lib/metals/types"
-import { formatMetalFinancial, formatMetalPrice } from "@lib/metals/format"
+import { formatMetalPrice } from "@lib/metals/format"
 
 type MetalMarketSidePanelsProps = {
   rate: number
@@ -232,17 +232,17 @@ export function InternationalSpotPricesTable({
                 黃金 Au
               </td>
               <td className="py-3 px-4 text-[#A3E635] font-bold font-mono text-base">
-                {formatMetalFinancial(prices.intlGoldBuy)}
+                {formatMetalPrice(prices.intlGoldBuy)}
               </td>
               <td className="py-3 px-4 text-[#FF9B9B] font-bold font-mono text-base">
-                {formatMetalFinancial(prices.intlGoldSell)}
+                {formatMetalPrice(prices.intlGoldSell)}
               </td>
               <td className="py-3 px-4 text-[#FF9B9B] font-medium">—</td>
               <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
-                {formatMetalFinancial(prices.rawGold + 160)}
+                {formatMetalPrice(prices.rawGold + 160)}
               </td>
               <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
-                {formatMetalFinancial(prices.rawGold - 150)}
+                {formatMetalPrice(prices.rawGold - 150)}
               </td>
             </tr>
             <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors bg-black/10">
@@ -250,17 +250,17 @@ export function InternationalSpotPricesTable({
                 白金 Pt
               </td>
               <td className="py-3 px-4 text-[#A3E635] font-bold font-mono text-base">
-                {formatMetalFinancial(prices.intlPtBuy)}
+                {formatMetalPrice(prices.intlPtBuy)}
               </td>
               <td className="py-3 px-4 text-[#FF9B9B] font-bold font-mono text-base">
-                {formatMetalFinancial(prices.intlPtSell)}
+                {formatMetalPrice(prices.intlPtSell)}
               </td>
               <td className="py-3 px-4 text-[#A3E635] font-medium">—</td>
               <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
-                {formatMetalFinancial(prices.rawPt + 240)}
+                {formatMetalPrice(prices.rawPt + 240)}
               </td>
               <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
-                {formatMetalFinancial(prices.rawPt - 20)}
+                {formatMetalPrice(prices.rawPt - 20)}
               </td>
             </tr>
             <tr className="border-b border-[#D4AF37]/10 hover:bg-black/20 transition-colors">
@@ -268,17 +268,17 @@ export function InternationalSpotPricesTable({
                 白銀 Ag
               </td>
               <td className="py-3 px-4 text-[#A3E635] font-bold font-mono text-base">
-                {formatMetalFinancial(prices.intlAgBuy)}
+                {formatMetalPrice(prices.intlAgBuy)}
               </td>
               <td className="py-3 px-4 text-[#FF9B9B] font-bold font-mono text-base">
-                {formatMetalFinancial(prices.intlAgSell)}
+                {formatMetalPrice(prices.intlAgSell)}
               </td>
               <td className="py-3 px-4 text-[#A3E635] font-medium">—</td>
               <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
-                {formatMetalFinancial(prices.rawAg + 10)}
+                {formatMetalPrice(prices.rawAg + 10)}
               </td>
               <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
-                {formatMetalFinancial(prices.rawAg - 6)}
+                {formatMetalPrice(prices.rawAg - 6)}
               </td>
             </tr>
             <tr className="hover:bg-black/20 transition-colors bg-black/10">
@@ -286,17 +286,17 @@ export function InternationalSpotPricesTable({
                 鈀金 Pd
               </td>
               <td className="py-3 px-4 text-[#A3E635] font-bold font-mono text-base">
-                {formatMetalFinancial(prices.intlPdBuy)}
+                {formatMetalPrice(prices.intlPdBuy)}
               </td>
               <td className="py-3 px-4 text-[#FF9B9B] font-bold font-mono text-base">
-                {formatMetalFinancial(prices.intlPdSell)}
+                {formatMetalPrice(prices.intlPdSell)}
               </td>
               <td className="py-3 px-4 text-[#FF9B9B] font-medium">—</td>
               <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
-                {formatMetalFinancial(prices.rawPd + 80)}
+                {formatMetalPrice(prices.rawPd + 80)}
               </td>
               <td className="py-3 px-4 text-[#FDF5E6]/70 font-mono">
-                {formatMetalFinancial(prices.rawPd - 60)}
+                {formatMetalPrice(prices.rawPd - 60)}
               </td>
             </tr>
           </tbody>
