@@ -3,6 +3,7 @@ import { listProducts } from "@lib/data/products"
 import { listCollections } from "@lib/data/collections"
 import { listCategories } from "@lib/data/categories"
 import { PRIMARY_COUNTRY_CODE, absolutePublicUrl } from "@lib/util/site-url"
+import { METAL_PRICE_FOOTER_PAGES } from "@lib/seo/metal-price-pages"
 import { HttpTypes } from "@medusajs/types"
 
 /** 與商品/文章頁 ISR 一致：每 60 秒重新向 Medusa 拉最新 URL */
@@ -115,6 +116,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entry("/blog", { priority: 0.8, changeFrequency: "daily" }),
     entry("/tools", { priority: 0.6 }),
     entry("/privacy", { priority: 0.3, changeFrequency: "yearly" }),
+    ...METAL_PRICE_FOOTER_PAGES.map((page) =>
+      entry(page.path, { priority: 0.95, changeFrequency: "daily" })
+    ),
   ]
 
   const [products, articles, collectionsResult, categories] =

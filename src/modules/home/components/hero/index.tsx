@@ -16,7 +16,7 @@ type HeroProps = {
 const Hero = ({ initialMetalsData = null, heroSlides }: HeroProps) => {
   return (
     <div className="w-full border-b border-ui-border-base relative bg-ui-bg-subtle">
-      <Carousel slides={heroSlides} />
+      {/* <Carousel slides={heroSlides} /> */}
 
       <DetailedPriceTable initialData={initialMetalsData} />
       <FeaturedProducts />

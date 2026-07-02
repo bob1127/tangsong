@@ -6,6 +6,7 @@ import {
 } from "@lib/metals/derive-prices"
 import type { MetalsData } from "@lib/metals/types"
 import { PRIMARY_SITE_LINKS, siteNavAbsoluteUrl } from "./site-navigation"
+import { METAL_PRICE_FOOTER_PAGES } from "./metal-price-pages"
 
 const SCHEMA_CONTEXT = "https://schema.org"
 const ORG_ID = `${SITE_URL}/#organization`
@@ -112,13 +113,27 @@ const homeWebPageSchema = {
     url: `${SITE_URL}/images/0002.jpg`,
   },
   inLanguage: "zh-TW",
-  significantLink: PRIMARY_SITE_LINKS.map((link) => siteNavAbsoluteUrl(link.path)),
+  significantLink: [
+    ...PRIMARY_SITE_LINKS.map((link) => siteNavAbsoluteUrl(link.path)),
+    ...METAL_PRICE_FOOTER_PAGES.map((link) => siteNavAbsoluteUrl(link.path)),
+  ],
 }
 
 function buildSiteNavigationSchemas() {
   return PRIMARY_SITE_LINKS.map((link) => ({
     "@type": "SiteNavigationElement",
     "@id": `${siteNavAbsoluteUrl(link.path)}#navigation`,
+    name: link.name,
+    description: link.description,
+    url: siteNavAbsoluteUrl(link.path),
+    isPartOf: { "@id": WEBSITE_ID },
+  }))
+}
+
+function buildFooterMetalNavigationSchemas() {
+  return METAL_PRICE_FOOTER_PAGES.map((link) => ({
+    "@type": "SiteNavigationElement",
+    "@id": `${siteNavAbsoluteUrl(link.path)}#footer-navigation`,
     name: link.name,
     description: link.description,
     url: siteNavAbsoluteUrl(link.path),
@@ -374,6 +389,7 @@ export function buildHomeCoreSchemaGraph(metals?: MetalsData | null) {
     buildStoreSchemaWithMetals(metals),
     buildHomeWebPageSchema(metals),
     ...buildSiteNavigationSchemas(),
+    ...buildFooterMetalNavigationSchemas(),
     homeFaqSchema,
   ]
 

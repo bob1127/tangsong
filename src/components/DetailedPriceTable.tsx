@@ -16,7 +16,6 @@ export default function DetailedPriceTable({
   const [data, setData] = useState<MetalsData | null>(initialData)
   const [loading, setLoading] = useState(!initialData)
   const [error, setError] = useState(false)
-  const [isChartOpen, setIsChartOpen] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -43,17 +42,6 @@ export default function DetailedPriceTable({
       cancelled = true
     }
   }, [initialData])
-
-  useEffect(() => {
-    if (isChartOpen) {
-      document.body.style.overflow = "hidden"
-    } else {
-      document.body.style.overflow = "unset"
-    }
-    return () => {
-      document.body.style.overflow = "unset"
-    }
-  }, [isChartOpen])
 
   if (loading) {
     return (
@@ -113,46 +101,10 @@ export default function DetailedPriceTable({
       : "—"
 
   return (
-    <>
-      {isChartOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center animate-in fade-in duration-200 p-2 md:p-4 bg-black/60 backdrop-blur-sm">
-          <div className="relative w-full md:w-[90vw] max-w-[1600px] h-[90vh] bg-white border border-[#D4AF37]/50 flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 shadow-2xl rounded-sm">
-            <div className="flex justify-between items-center px-6 pt-4 shrink-0 bg-[#f8f8f8] border-b border-gray-200 pb-3">
-              <div className="flex items-center gap-3">
-                <h3 className="text-lg font-bold text-gray-800">
-                  國際貴金屬走勢圖
-                </h3>
-              </div>
-              <button
-                onClick={() => setIsChartOpen(false)}
-                className="text-stone-500 hover:text-black p-2 transition-all duration-200 flex items-center justify-center group bg-white rounded-full border border-gray-300 shadow-sm"
-              >
-                <svg
-                  className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  ></path>
-                </svg>
-              </button>
-            </div>
-            <div className="flex-1 w-full relative overflow-y-auto bg-stone-50">
-              <TradingViewChart />
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div
-        id="metal-prices"
-        className="w-full max-w-[1400px] mx-auto mt-12 px-4 lg:px-8 mb-20 font-mono"
-      >
+    <div
+      id="metal-prices"
+      className="w-full max-w-[1400px] mx-auto mt-12 px-4 lg:px-8 mb-20 font-mono"
+    >
         {/* 頭部資訊區 */}
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-4 border-b border-[#D4AF37]/40 pb-3 gap-4 md:gap-0">
           <div>
@@ -181,89 +133,11 @@ export default function DetailedPriceTable({
                 {rate.toFixed(2)}
               </span>
             </span>
-            <button
-              onClick={() => setIsChartOpen(true)}
-              className="group flex items-center gap-2 bg-gradient-to-r from-[#D4AF37] to-[#B8942E] hover:from-[#FDF5E6] hover:to-[#D4AF37] text-[#3A0A0E] text-xs font-bold px-4 py-2 rounded-sm border border-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)] hover:shadow-[0_0_15px_rgba(212,175,55,0.5)] transition-all duration-300"
-            >
-              <svg
-                className="w-4 h-4 text-[#3A0A0E]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
-                ></path>
-              </svg>
-              國際即時走勢
-            </button>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* ================= 左側資訊欄 ================= */}
-          <div className="col-span-1 space-y-6">
-            {/* 匯率表 */}
-            <div className="bg-[#3A0A0E] border border-[#D4AF37]/30 overflow-hidden shadow-md rounded-sm">
-              <div className="bg-[#3A0A0E] px-4 py-3 text-sm font-bold text-[#F3E5AB] border-b border-[#D4AF37]/20 tracking-wider">
-                新台幣匯率表
-              </div>
-              <table className="w-full text-sm text-left">
-                <tbody>
-                  <tr className="border-b border-[#D4AF37]/10 hover:bg-black/10 transition-colors">
-                    <td className="py-3 px-4 text-[#FDF5E6]">美元 USD</td>
-                    <td className="py-3 px-4 text-right text-[#FFD3D3] font-bold">
-                      {rate.toFixed(3)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-[#D4AF37]/10 hover:bg-black/10 transition-colors bg-black/10">
-                    <td className="py-3 px-4 text-[#FDF5E6]">人民幣 CNY</td>
-                    <td className="py-3 px-4 text-right text-[#FFD3D3] font-bold">
-                      4.425
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-black/10 transition-colors">
-                    <td className="py-3 px-4 text-[#FDF5E6]">歐元 EUR</td>
-                    <td className="py-3 px-4 text-right text-[#A3E635] font-bold">
-                      34.612
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            {/* 指數表 */}
-            <div className="bg-[#3A0A0E] border border-[#D4AF37]/30 overflow-hidden shadow-md rounded-sm">
-              <div className="bg-[#3A0A0E] px-4 py-3 text-sm font-bold text-[#F3E5AB] border-b border-[#D4AF37]/20 tracking-wider">
-                國際金融指數
-              </div>
-              <table className="w-full text-sm text-left">
-                <tbody>
-                  <tr className="border-b border-[#D4AF37]/10 hover:bg-black/10 transition-colors">
-                    <td className="py-3 px-4 text-[#FDF5E6]">台灣加權</td>
-                    <td className="py-3 px-4 text-right text-[#FFD3D3] font-bold">
-                      20,352.14
-                    </td>
-                  </tr>
-                  <tr className="border-b border-[#D4AF37]/10 hover:bg-black/10 transition-colors bg-black/10">
-                    <td className="py-3 px-4 text-[#FDF5E6]">美元指數</td>
-                    <td className="py-3 px-4 text-right text-[#A3E635] font-bold">
-                      104.25
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-black/10 transition-colors">
-                    <td className="py-3 px-4 text-[#FDF5E6]">紐約原油</td>
-                    <td className="py-3 px-4 text-right text-[#FFD3D3] font-bold">
-                      85.43
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
 
           {/* ================= 右側主表格欄 ================= */}
           <div className="col-span-1 lg:col-span-3 space-y-6">
@@ -512,9 +386,76 @@ export default function DetailedPriceTable({
                 </table>
               </div>
             </div>
+
+            <div className="bg-[#3A0A0E] border border-[#D4AF37]/30 overflow-hidden shadow-xl rounded-sm">
+              <div className="bg-[#3A0A0E]/10 px-4 py-3.5 text-sm font-bold text-[#F3E5AB] border-b border-[#D4AF37]/20 tracking-wider">
+                國際貴金屬走勢圖
+              </div>
+              <div className="bg-[#FAFAFA]">
+                <TradingViewChart embedded />
+              </div>
+            </div>
+          </div>
+          <div className="col-span-1 space-y-6">
+            {/* 匯率表 */}
+            <div className="bg-[#3A0A0E] border border-[#D4AF37]/30 overflow-hidden shadow-md rounded-sm">
+              <div className="bg-[#3A0A0E] px-4 py-3 text-sm font-bold text-[#F3E5AB] border-b border-[#D4AF37]/20 tracking-wider">
+                新台幣匯率表
+              </div>
+              <table className="w-full text-sm text-left">
+                <tbody>
+                  <tr className="border-b border-[#D4AF37]/10 hover:bg-black/10 transition-colors">
+                    <td className="py-3 px-4 text-[#FDF5E6]">美元 USD</td>
+                    <td className="py-3 px-4 text-right text-[#FFD3D3] font-bold">
+                      {rate.toFixed(3)}
+                    </td>
+                  </tr>
+                  <tr className="border-b border-[#D4AF37]/10 hover:bg-black/10 transition-colors bg-black/10">
+                    <td className="py-3 px-4 text-[#FDF5E6]">人民幣 CNY</td>
+                    <td className="py-3 px-4 text-right text-[#FFD3D3] font-bold">
+                      4.425
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-black/10 transition-colors">
+                    <td className="py-3 px-4 text-[#FDF5E6]">歐元 EUR</td>
+                    <td className="py-3 px-4 text-right text-[#A3E635] font-bold">
+                      34.612
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* 指數表 */}
+            <div className="bg-[#3A0A0E] border border-[#D4AF37]/30 overflow-hidden shadow-md rounded-sm">
+              <div className="bg-[#3A0A0E] px-4 py-3 text-sm font-bold text-[#F3E5AB] border-b border-[#D4AF37]/20 tracking-wider">
+                國際金融指數
+              </div>
+              <table className="w-full text-sm text-left">
+                <tbody>
+                  <tr className="border-b border-[#D4AF37]/10 hover:bg-black/10 transition-colors">
+                    <td className="py-3 px-4 text-[#FDF5E6]">台灣加權</td>
+                    <td className="py-3 px-4 text-right text-[#FFD3D3] font-bold">
+                      20,352.14
+                    </td>
+                  </tr>
+                  <tr className="border-b border-[#D4AF37]/10 hover:bg-black/10 transition-colors bg-black/10">
+                    <td className="py-3 px-4 text-[#FDF5E6]">美元指數</td>
+                    <td className="py-3 px-4 text-right text-[#A3E635] font-bold">
+                      104.25
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-black/10 transition-colors">
+                    <td className="py-3 px-4 text-[#FDF5E6]">紐約原油</td>
+                    <td className="py-3 px-4 text-right text-[#FFD3D3] font-bold">
+                      85.43
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-      </div>
-    </>
+    </div>
   )
 }

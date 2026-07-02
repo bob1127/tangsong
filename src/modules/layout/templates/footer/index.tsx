@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Text, clx } from "@medusajs/ui"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { METAL_PRICE_FOOTER_PAGES } from "@lib/seo/metal-price-pages"
 import MedusaCTA from "@modules/layout/components/medusa-cta"
 
 export default function Footer() {
@@ -155,7 +156,7 @@ export default function Footer() {
           </div>
 
           {/* 👇 關鍵修改區：將 lg:w-2/3 改為 lg:w-[55%]，縮小寬度來讓區塊向右推 */}
-          <div className="w-full lg:w-[55%] grid grid-cols-1 md:grid-cols-3 gap-12 text-sm tracking-widest font-sans">
+          <div className="w-full lg:w-[55%] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 text-sm tracking-widest font-sans">
             <div className="flex flex-col gap-6">
               <h3 className="text-lg font-serif tracking-[0.2em] mb-4">
                 商品種類
@@ -210,6 +211,24 @@ export default function Footer() {
                     </svg>
                   </LocalizedClientLink>
                 </li>
+              </ul>
+            </div>
+
+            <div className="flex flex-col gap-6">
+              <h3 className="text-lg font-serif tracking-[0.2em] mb-4">
+                金價行情
+              </h3>
+              <ul className="flex flex-col gap-4 text-gray-400">
+                {METAL_PRICE_FOOTER_PAGES.map((page) => (
+                  <li key={page.path}>
+                    <LocalizedClientLink
+                      href={page.path}
+                      className="hover:text-[#82111F] transition-colors duration-300"
+                    >
+                      {page.name}
+                    </LocalizedClientLink>
+                  </li>
+                ))}
               </ul>
             </div>
 
