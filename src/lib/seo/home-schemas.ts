@@ -314,8 +314,10 @@ function buildMetalOfferCatalogSchema(metals: MetalsData) {
   const offers = buildStorePriceOffers(prices)
   if (offers.length === 0) return null
 
-  const priceValidUntil = getPriceValidUntil(prices.updateTime)
-  const updatedLabel = new Date(prices.updateTime).toLocaleString("zh-TW")
+  const catalogUpdateTime =
+    prices.storePricesUpdatedAt ?? prices.updateTime
+  const priceValidUntil = getPriceValidUntil(catalogUpdateTime)
+  const updatedLabel = new Date(catalogUpdateTime).toLocaleString("zh-TW")
 
   return {
     "@type": "OfferCatalog",

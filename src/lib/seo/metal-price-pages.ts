@@ -156,7 +156,7 @@ function buildOfferCatalogFromStorePrices(metals: MetalsData | null | undefined)
   const offers = buildStorePriceOffers(prices)
   if (offers.length === 0) return null
 
-  const updateTime = prices.updateTime
+  const updateTime = prices.storePricesUpdatedAt ?? prices.updateTime
   const priceValidUntil = getPriceValidUntil(updateTime)
 
   return {
@@ -227,6 +227,12 @@ export function buildMetalPricePageSchemaGraph(
   const pageUrl = absolutePublicUrl(page.path)
   const pageId = `${pageUrl}#webpage`
 
+  const prices = metals ? deriveMetalDisplayPrices(metals) : null
+  const storePageModified =
+    key === "store-gold-prices"
+      ? prices?.storePricesUpdatedAt ?? metals?.store_prices_updated_at
+      : undefined
+
   const graph: Record<string, unknown>[] = [
     {
       "@type": "BreadcrumbList",
@@ -244,9 +250,11 @@ export function buildMetalPricePageSchemaGraph(
       isPartOf: { "@id": WEBSITE_ID },
       about: { "@id": STORE_ID },
       inLanguage: "zh-TW",
-      ...(metals?.fetch_timestamp || metals?.updated_at
-        ? { dateModified: metals.fetch_timestamp ?? metals.updated_at }
-        : {}),
+      ...(storePageModified
+        ? { dateModified: storePageModified }
+        : metals?.fetch_timestamp || metals?.updated_at
+          ? { dateModified: metals.fetch_timestamp ?? metals.updated_at }
+          : {}),
     },
     {
       "@type": "SiteNavigationElement",

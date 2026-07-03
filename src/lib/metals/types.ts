@@ -20,10 +20,13 @@ export interface MetalsData {
   pt950_buy?: number
   pd_sell?: number
   pd_buy?: number
+  /** 後台手動更新牌告價的時間（ISO 8601） */
+  store_prices_updated_at?: string | null
 }
 
 export interface MetalDisplayPrices {
   updateTime: string
+  storePricesUpdatedAt?: string | null
   rate: number
   rawGold: number
   rawPt: number

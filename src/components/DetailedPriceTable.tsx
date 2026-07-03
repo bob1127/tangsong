@@ -5,6 +5,7 @@ import { deriveMetalDisplayPrices } from "@lib/metals/derive-prices"
 import { fetchLatestMetalsClient } from "@lib/metals/fetch-metals"
 import type { MetalsData } from "@lib/metals/types"
 import TradingViewChart from "./TradingViewChart"
+import { formatMetalUpdateTime } from "@lib/metals/format"
 
 type DetailedPriceTableProps = {
   initialData?: MetalsData | null
@@ -64,6 +65,7 @@ export default function DetailedPriceTable({
 
   const {
     updateTime,
+    storePricesUpdatedAt,
     rate,
     rawGold,
     rawPt,
@@ -91,6 +93,8 @@ export default function DetailedPriceTable({
     if (price <= 0) return "—"
     return price.toLocaleString()
   }
+
+  const storeUpdatedLabel = formatMetalUpdateTime(storePricesUpdatedAt)
 
   return (
     <div
@@ -261,9 +265,14 @@ export default function DetailedPriceTable({
                 <span className="tracking-widest font-serif text-base">
                   唐宋珠寶 實體門市牌告價 (新台幣 / 台錢)
                 </span>
-                <span className="text-xs font-normal text-[#FDF5E6]/70">
-                  不強迫交易 ‧ 儀器精準檢測 ｜ 實際價格依門市內公布為準
-                </span>
+                <div className="text-xs font-normal text-[#FDF5E6]/70 text-left sm:text-right">
+                  {storeUpdatedLabel && (
+                    <p className="text-[#F3E5AB]/90 font-medium mb-1">
+                      最後更新時間：{storeUpdatedLabel}
+                    </p>
+                  )}
+                  <p>不強迫交易 ‧ 儀器精準檢測 ｜ 實際價格依門市內公布為準</p>
+                </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-center">

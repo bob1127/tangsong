@@ -29,6 +29,7 @@ export function deriveMetalDisplayPrices(
 
   return {
     updateTime,
+    storePricesUpdatedAt: data.store_prices_updated_at ?? null,
     rate,
     rawGold,
     rawPt,
