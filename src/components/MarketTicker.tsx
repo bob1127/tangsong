@@ -90,7 +90,7 @@ export default function MarketTicker() {
 
   if (loading) {
     return (
-      <div className="fixed right-2 md:right-6 top-1/2 -translate-y-1/2 z-[999] w-72 p-5 bg-[#b62f26]/90 backdrop-blur-md border border-[#D4AF37]/20 rounded-xl animate-pulse">
+      <div className="fixed right-2 md:right-6 top-1/2 -translate-y-1/2 z-[999] w-72 p-5 bg-gradient-to-br from-[#3A0A0E] to-[#801b15] border-2 border-[#D4AF37]/70 rounded-xl animate-pulse shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
         <div className="h-4 bg-[#D4AF37]/20 rounded w-1/2 mb-4"></div>
         <div className="space-y-3">
           <div className="h-12 bg-[#5A1216]/50 rounded"></div>
@@ -152,7 +152,7 @@ export default function MarketTicker() {
     return (
       <button
         onClick={() => setIsCollapsed(false)}
-        className="fixed right-0 top-1/2 -translate-y-1/2 z-[999] flex flex-col items-center justify-center gap-1 bg-[#b62f26]/95 backdrop-blur-md border border-r-0 border-[#D4AF37]/50 p-2 py-4 rounded-l-xl transition-all duration-300 hover:bg-[#5A1216] group shadow-2xl"
+        className="fixed right-0 top-1/2 -translate-y-1/2 z-[999] flex flex-col items-center justify-center gap-1 bg-gradient-to-b from-[#3A0A0E] to-[#7c140e] border border-[#bdaf84] p-2 py-4 rounded-l-xl transition-all duration-300 hover:from-[#5A1216] hover:to-[#3A0A0E] group "
       >
         <span
           className={`w-2 h-2 rounded-full animate-pulse mb-1 ${
@@ -168,7 +168,7 @@ export default function MarketTicker() {
   }
 
   return (
-    <div className="fixed right-2 md:right-6 top-1/2 -translate-y-1/2 z-[999] flex flex-col gap-4 w-[310px] md:w-[330px] p-5 bg-[#3A0A0E] backdrop-blur-md border border-[#D4AF37]/40 transition-all duration-500 hover:border-[#D4AF37]/70 transform origin-right scale-90 md:scale-100 shadow-[0_20px_50px_rgba(0,0,0,0.5)]  ">
+    <div className="fixed right-2 md:right-6 top-1/2 -translate-y-1/2 z-[999] flex flex-col gap-4 w-[310px] md:w-[330px] p-5 bg-gradient-to-br from-[#3A0A0E] to-[#801b15] backdrop-blur-md border-2 border-[#D4AF37]/70 transition-all duration-500 hover:border-[#D4AF37] transform origin-right scale-90 md:scale-100 shadow-[0_0_0_1px_rgba(212,175,55,0.25),0_20px_50px_rgba(0,0,0,0.5)]">
       {/* Header */}
       <div className="border-b border-[#D4AF37]/30 pb-2 relative">
         <div className="flex items-center justify-between pr-6">
