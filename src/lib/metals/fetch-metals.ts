@@ -21,32 +21,74 @@ function shouldPreferLocalBackend(): boolean {
   )
 }
 
+async function fetchStorePricesUpdatedAt(
+  baseUrl: string
+): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `${baseUrl}/store/metal-settings?nocache=${Date.now()}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "x-publishable-api-key": getPublishableKey(),
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+        },
+        cache: "no-store",
+      }
+    )
+
+    if (!res.ok) return null
+
+    const json = await res.json()
+    if (!json.success) return null
+
+    return json.store_prices_updated_at ?? json.updated_at ?? null
+  } catch {
+    return null
+  }
+}
+
+function mergeStorePricesUpdatedAt(
+  metals: MetalsData | null,
+  updatedAt: string | null
+): MetalsData | null {
+  if (!metals) return null
+  if (metals.store_prices_updated_at) return metals
+  if (!updatedAt) return metals
+  return { ...metals, store_prices_updated_at: updatedAt }
+}
+
 async function fetchMetalsFromUrl(
   baseUrl: string,
   query = ""
 ): Promise<MetalsData | null> {
   const suffix = query || `?nocache=${Date.now()}`
-  const res = await fetch(`${baseUrl}/store/metals${suffix}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "x-publishable-api-key": getPublishableKey(),
-      "Cache-Control": "no-cache, no-store, must-revalidate",
-      Pragma: "no-cache",
-    },
-    cache: "no-store",
-  })
+  const [metalsRes, storeUpdatedAt] = await Promise.all([
+    fetch(`${baseUrl}/store/metals${suffix}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "x-publishable-api-key": getPublishableKey(),
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
+      },
+      cache: "no-store",
+    }),
+    fetchStorePricesUpdatedAt(baseUrl),
+  ])
 
-  if (!res.ok) return null
+  if (!metalsRes.ok) return null
 
-  const contentType = res.headers.get("content-type")
+  const contentType = metalsRes.headers.get("content-type")
   if (!contentType?.includes("application/json")) return null
 
-  const json = await res.json()
+  const json = await metalsRes.json()
   if (!json.success) return null
 
   const latest = Array.isArray(json.data) ? json.data[0] : json.data
-  return latest ?? null
+  return mergeStorePricesUpdatedAt(latest ?? null, storeUpdatedAt)
 }
 
 type FetchLatestMetalsOptions = {
@@ -95,7 +137,8 @@ export async function fetchLatestMetals(
     if (!json.success) return null
 
     const latest = Array.isArray(json.data) ? json.data[0] : json.data
-    return latest ?? null
+    const storeUpdatedAt = await fetchStorePricesUpdatedAt(primary)
+    return mergeStorePricesUpdatedAt(latest ?? null, storeUpdatedAt)
   } catch {
     return null
   }
