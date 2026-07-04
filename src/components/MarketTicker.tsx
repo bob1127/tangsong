@@ -185,7 +185,12 @@ export default function MarketTicker() {
                 }`}
               ></span>
             </span>
-            唐宋珠寶即時行情
+            唐宋珠寶
+            {(() => {
+              const d = data?.fetch_timestamp ? new Date(data.fetch_timestamp) : new Date()
+              return `${d.getMonth() + 1}月${d.getDate()}日`
+            })()}
+            即時行情
           </h3>
         </div>
         <div className="flex justify-between items-center mt-1">

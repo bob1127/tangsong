@@ -261,18 +261,20 @@ export default function DetailedPriceTable({
 
             {/* 實體門市牌告價 */}
             <div className="bg-gradient-to-br from-[#3A0A0E] to-[#801b15] border border-[#D4AF37]/40 overflow-hidden shadow-xl rounded-sm">
-              <div className="bg-black/15 px-4 py-3.5 text-sm font-bold text-[#F3E5AB] border-b border-[#D4AF37]/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                <span className="tracking-widest font-serif text-base">
+              <div className="bg-black/15 px-4 py-3.5 text-sm font-bold text-[#F3E5AB] border-b border-[#D4AF37]/30 flex flex-col items-center gap-1.5 md:grid md:grid-cols-3 md:items-center md:gap-2">
+                <span className="tracking-widest font-serif text-xs text-center md:text-left">
                   唐宋珠寶 實體門市牌告價 (新台幣 / 台錢)
                 </span>
-                <div className="text-xs font-normal text-[#FDF5E6]/70 text-left sm:text-right">
+                <div className="text-center">
                   {storeUpdatedLabel && (
-                    <p className="text-[#F3E5AB]/90 font-medium mb-1">
+                    <p className="text-base font-bold text-[#F3E5AB] tracking-wide">
                       最後更新時間：{storeUpdatedLabel}
                     </p>
                   )}
-                  <p>不強迫交易 ‧ 儀器精準檢測 ｜ 實際價格依門市內公布為準</p>
                 </div>
+                <p className="text-[10px] font-normal text-[#FDF5E6]/70 text-center md:text-right">
+                  不強迫交易 ‧ 儀器精準檢測 ｜ 實際價格依門市內公布為準
+                </p>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-center">
