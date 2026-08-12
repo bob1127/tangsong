@@ -1,110 +1,92 @@
-import { HttpTypes } from "@medusajs/types"
 import { NextRequest, NextResponse } from "next/server"
-import { PRIMARY_COUNTRY_CODE } from "@lib/util/site-url"
 
 const BACKEND_URL = process.env.MEDUSA_BACKEND_URL
 const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
-const DEFAULT_REGION = PRIMARY_COUNTRY_CODE
+const DEFAULT_REGION = (
+  process.env.NEXT_PUBLIC_DEFAULT_REGION || "tw"
+).toLowerCase()
 
 const regionMapCache = {
-  regionMap: new Map<string, HttpTypes.StoreRegion>(),
-  regionMapUpdated: Date.now(),
+  regionMap: new Map<string, true>(),
+  regionMapUpdated: 0,
 }
 
-async function getRegionMap(cacheId: string) {
-  const { regionMap, regionMapUpdated } = regionMapCache
+async function getRegionMap() {
+  const now = Date.now()
+  const hasCache = regionMapCache.regionMap.size > 0
+  const isFresh = now - regionMapCache.regionMapUpdated < 3600 * 1000
 
-  if (!BACKEND_URL) {
-    console.error(
-      "Middleware.ts: MEDUSA_BACKEND_URL is not set. Falling back to default region."
-    )
+  if (hasCache && isFresh) {
     return regionMapCache.regionMap
   }
 
-  if (
-    !regionMap.keys().next().value ||
-    regionMapUpdated < Date.now() - 3600 * 1000
-  ) {
-    try {
-      const response = await fetch(`${BACKEND_URL}/store/regions`, {
-        headers: {
-          "x-publishable-api-key": PUBLISHABLE_API_KEY || "",
-        },
-        next: {
-          revalidate: 3600,
-          tags: [`regions-${cacheId}`],
-        },
-        cache: "force-cache",
-      })
+  if (!BACKEND_URL) {
+    return regionMapCache.regionMap
+  }
 
-      const json = await response.json().catch(() => ({}))
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 3000)
 
-      if (!response.ok) {
-        throw new Error(
-          typeof json?.message === "string"
-            ? json.message
-            : `Failed to fetch regions (${response.status})`
-        )
-      }
+    const response = await fetch(`${BACKEND_URL}/store/regions`, {
+      headers: {
+        "x-publishable-api-key": PUBLISHABLE_API_KEY || "",
+      },
+      signal: controller.signal,
+      cache: "no-store",
+    })
 
-      const regions = json.regions as HttpTypes.StoreRegion[] | undefined
+    clearTimeout(timeout)
 
-      if (!regions?.length) {
-        throw new Error("No regions found in Medusa response.")
-      }
-
-      regionMapCache.regionMap.clear()
-      regions.forEach((region) => {
-        region.countries?.forEach((c) => {
-          regionMapCache.regionMap.set(c.iso_2 ?? "", region)
-        })
-      })
-
-      regionMapCache.regionMapUpdated = Date.now()
-    } catch (error) {
-      console.error(
-        "Middleware.ts: Failed to fetch regions from backend. Using fallback.",
-        error
-      )
-      // Keep any previously cached map; otherwise leave empty and fall back later.
-      regionMapCache.regionMapUpdated = Date.now()
+    if (!response.ok) {
+      throw new Error(`regions HTTP ${response.status}`)
     }
+
+    const json = (await response.json()) as {
+      regions?: Array<{ countries?: Array<{ iso_2?: string | null }> }>
+    }
+
+    if (!json.regions?.length) {
+      throw new Error("No regions in response")
+    }
+
+    const nextMap = new Map<string, true>()
+    json.regions.forEach((region) => {
+      region.countries?.forEach((c) => {
+        if (c.iso_2) nextMap.set(c.iso_2.toLowerCase(), true)
+      })
+    })
+
+    regionMapCache.regionMap = nextMap
+    regionMapCache.regionMapUpdated = now
+  } catch (error) {
+    console.error("Middleware: regions fetch failed, using fallback.", error)
   }
 
   return regionMapCache.regionMap
 }
 
-async function getCountryCode(
+function resolveCountryCode(
   request: NextRequest,
-  regionMap: Map<string, HttpTypes.StoreRegion | number>
+  regionMap: Map<string, true>
 ) {
-  try {
-    let countryCode
+  const vercelCountryCode = request.headers
+    .get("x-vercel-ip-country")
+    ?.toLowerCase()
+  const urlCountryCode = request.nextUrl.pathname.split("/")[1]?.toLowerCase()
 
-    const vercelCountryCode = request.headers
-      .get("x-vercel-ip-country")
-      ?.toLowerCase()
-
-    const urlCountryCode = request.nextUrl.pathname.split("/")[1]?.toLowerCase()
-
-    if (urlCountryCode && regionMap.has(urlCountryCode)) {
-      countryCode = urlCountryCode
-    } else if (vercelCountryCode && regionMap.has(vercelCountryCode)) {
-      countryCode = vercelCountryCode
-    } else if (regionMap.has(DEFAULT_REGION)) {
-      countryCode = DEFAULT_REGION
-    } else if (regionMap.keys().next().value) {
-      countryCode = regionMap.keys().next().value
-    } else {
-      // Backend down / empty region map: keep storefront reachable
-      countryCode = DEFAULT_REGION
-    }
-
-    return countryCode
-  } catch (error) {
-    console.error("Middleware.ts: Error resolving country code.", error)
+  if (urlCountryCode && regionMap.has(urlCountryCode)) {
+    return urlCountryCode
+  }
+  if (vercelCountryCode && regionMap.has(vercelCountryCode)) {
+    return vercelCountryCode
+  }
+  if (regionMap.has(DEFAULT_REGION)) {
     return DEFAULT_REGION
   }
+
+  const first = regionMap.keys().next().value
+  return first || DEFAULT_REGION
 }
 
 export async function middleware(request: NextRequest) {
@@ -127,17 +109,13 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(destination, 301)
     }
 
-    let cacheIdCookie = request.cookies.get("_medusa_cache_id")
-    let cacheId = cacheIdCookie?.value || crypto.randomUUID()
+    const cacheIdCookie = request.cookies.get("_medusa_cache_id")
+    const cacheId = cacheIdCookie?.value || crypto.randomUUID()
 
-    const regionMap = await getRegionMap(cacheId)
-    const countryCode =
-      (regionMap && (await getCountryCode(request, regionMap))) ||
-      DEFAULT_REGION
+    const regionMap = await getRegionMap()
+    const countryCode = resolveCountryCode(request, regionMap)
 
-    const urlHasCountryCode = countryCode && firstSegment === countryCode
-
-    if (urlHasCountryCode) {
+    if (firstSegment === countryCode) {
       const response = NextResponse.next()
       if (!cacheIdCookie) {
         response.cookies.set("_medusa_cache_id", cacheId, {
@@ -149,30 +127,25 @@ export async function middleware(request: NextRequest) {
 
     const redirectPath = pathname === "/" ? "" : pathname
     const queryString = request.nextUrl.search
-
-    const internalUrl = new URL(
-      `/${countryCode}${redirectPath}${queryString}`,
-      request.url
+    const response = NextResponse.rewrite(
+      new URL(`/${countryCode}${redirectPath}${queryString}`, request.url)
     )
-    const response = NextResponse.rewrite(internalUrl)
 
     if (!cacheIdCookie) {
       response.cookies.set("_medusa_cache_id", cacheId, {
         maxAge: 60 * 60 * 24,
       })
     }
+
     return response
   } catch (error) {
-    console.error("Middleware.ts: Unhandled error, falling back.", error)
-
+    console.error("Middleware: fatal fallback rewrite.", error)
     const pathname = request.nextUrl.pathname
     const redirectPath = pathname === "/" ? "" : pathname
     const queryString = request.nextUrl.search
-    const internalUrl = new URL(
-      `/${DEFAULT_REGION}${redirectPath}${queryString}`,
-      request.url
+    return NextResponse.rewrite(
+      new URL(`/${DEFAULT_REGION}${redirectPath}${queryString}`, request.url)
     )
-    return NextResponse.rewrite(internalUrl)
   }
 }
 
